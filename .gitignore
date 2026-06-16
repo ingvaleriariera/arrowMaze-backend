@@ -1,0 +1,14 @@
+# Dependencias
+node_modules
+/dist
+/artifacts
+npm-debug.log
+pnpm-debug.log
+
+# Variables de entorno (¡SÚPER IMPORTANTE!)
+.env
+.env.development
+.env.local
+
+# Archivos del sistema Mac
+.DS_Store
