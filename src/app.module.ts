@@ -23,7 +23,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
           rejectUnauthorized: false,
         },
         retryAttempts: 5,
-        retryDelay: 3000, 
+        retryDelay: 3000,
       }),
     }),
   ],
