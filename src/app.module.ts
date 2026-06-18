@@ -1,12 +1,15 @@
-import { Module, OnModuleInit, Inject } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { AuthModule } from './infrastructure/modules/auth.module';
 import { LevelModule } from './infrastructure/modules/level.module';
 import { ProgressModule } from './infrastructure/modules/progress.module';
 import { ScoreModule } from './infrastructure/modules/score.module';
 import { LeaderboardModule } from './infrastructure/modules/leaderboard.module';
 import { DatabaseSeeder } from './infrastructure/seeders/database.seeder';
+import { LoggingInterceptor } from './infrastructure/aop/logging.interceptor';
+import { HttpExceptionFilter } from './infrastructure/aop/http-exception.filter';
 
 @Module({
   imports: [
@@ -37,6 +40,16 @@ import { DatabaseSeeder } from './infrastructure/seeders/database.seeder';
     ProgressModule,
     ScoreModule,
     LeaderboardModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
   ],
 })
 export class AppModule implements OnModuleInit {
