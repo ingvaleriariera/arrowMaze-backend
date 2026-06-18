@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { LevelDefinitionEntity } from '../entities/level-definition.entity';
+import { LevelDefinitionEntity } from '../orm/level-definition.entity';
 import { LevelController } from '../../adapters/controllers/level.controller';
 import { GetLevelsUseCase } from '../../application/use-cases/get-levels.use-case';
 import { UpdateLevelConfigurationUseCase } from '../../application/use-cases/update-level-configuration.use-case';

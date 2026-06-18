@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PlayerProgressEntity } from '../../infrastructure/entities/player-progress.entity';
+import { PlayerProgressEntity } from '../../infrastructure/orm/player-progress.entity';
 import { PlayerProgress } from '../../domain/aggregates/player-progress.aggregate';
 import { ProgressId } from '../../domain/value-objects/progress-id.vo';
 import { UserId } from '../../domain/value-objects/user-id.vo';

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IScoreRepository } from '../../domain/ports/score.repository.port';
 import { ScoreEntry } from '../../domain/aggregates/score-entry.aggregate';
-import { ScoreEntryEntity } from '../../infrastructure/entities/score-entry.entity';
+import { ScoreEntryEntity } from '../../infrastructure/orm/score-entry.entity';
 import { ScoreEntryEntityMapper } from '../mappers/score-entry-entity.mapper';
 import { LevelId } from '../../domain/value-objects/level-id.vo';
 

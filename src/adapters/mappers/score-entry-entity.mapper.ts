@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ScoreEntryEntity } from '../../infrastructure/entities/score-entry.entity';
+import { ScoreEntryEntity } from '../../infrastructure/orm/score-entry.entity';
 import { ScoreEntry } from '../../domain/aggregates/score-entry.aggregate';
 import { ScoreEntryId } from '../../domain/value-objects/score-entry-id.vo';
 import { UserId } from '../../domain/value-objects/user-id.vo';

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IPlayerProgressRepository } from '../../domain/ports/player-progress.repository.port';
 import { PlayerProgress } from '../../domain/aggregates/player-progress.aggregate';
-import { PlayerProgressEntity } from '../../infrastructure/entities/player-progress.entity';
+import { PlayerProgressEntity } from '../../infrastructure/orm/player-progress.entity';
 import { PlayerProgressEntityMapper } from '../mappers/player-progress-entity.mapper';
 import { UserId } from '../../domain/value-objects/user-id.vo';
 

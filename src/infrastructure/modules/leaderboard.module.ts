@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ScoreEntryEntity } from '../entities/score-entry.entity';
+import { ScoreEntryEntity } from '../orm/score-entry.entity';
 import { LeaderboardController } from '../../adapters/controllers/leaderboard.controller';
 import { GetLeaderboardUseCase } from '../../application/use-cases/get-leaderboard.use-case';
 import { ScoreRepositoryImpl } from '../../adapters/repositories/score.repository.impl';

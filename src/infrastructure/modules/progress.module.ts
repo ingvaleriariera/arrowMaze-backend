@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PlayerProgressEntity } from '../entities/player-progress.entity';
+import { PlayerProgressEntity } from '../orm/player-progress.entity';
 import { ProgressController } from '../../adapters/controllers/progress.controller';
 import { SyncProgressUseCase } from '../../application/use-cases/sync-progress.use-case';
 import { PlayerProgressRepositoryImpl } from '../../adapters/repositories/player-progress.repository.impl';

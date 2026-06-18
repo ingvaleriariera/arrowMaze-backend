@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UserEntity } from '../../infrastructure/entities/user.entity';
+import { UserEntity } from '../../infrastructure/orm/user.entity';
 import { User } from '../../domain/aggregates/user.aggregate';
 import { UserId } from '../../domain/value-objects/user-id.vo';
 import { Email } from '../../domain/value-objects/email.vo';

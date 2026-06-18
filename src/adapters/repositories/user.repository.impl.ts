@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IUserRepository } from '../../domain/ports/user.repository.port';
 import { User } from '../../domain/aggregates/user.aggregate';
-import { UserEntity } from '../../infrastructure/entities/user.entity';
+import { UserEntity } from '../../infrastructure/orm/user.entity';
 import { UserEntityMapper } from '../mappers/user-entity.mapper';
 import { Email } from '../../domain/value-objects/email.vo';
 import { UserId } from '../../domain/value-objects/user-id.vo';

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { LevelDefinitionEntity } from '../../infrastructure/entities/level-definition.entity';
+import { LevelDefinitionEntity } from '../../infrastructure/orm/level-definition.entity';
 import { LevelDefinition } from '../../domain/aggregates/level-definition.aggregate';
 import { LevelId } from '../../domain/value-objects/level-id.vo';
 import { Difficulty } from '../../domain/value-objects/difficulty.vo';

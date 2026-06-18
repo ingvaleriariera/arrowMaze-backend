@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ILevelDefinitionRepository } from '../../domain/ports/level-definition.repository.port';
 import { LevelDefinition } from '../../domain/aggregates/level-definition.aggregate';
-import { LevelDefinitionEntity } from '../../infrastructure/entities/level-definition.entity';
+import { LevelDefinitionEntity } from '../../infrastructure/orm/level-definition.entity';
 import { LevelDefinitionEntityMapper } from '../mappers/level-definition-entity.mapper';
 import { LevelId } from '../../domain/value-objects/level-id.vo';
 import { Difficulty } from '../../domain/value-objects/difficulty.vo';
