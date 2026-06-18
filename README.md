@@ -1,98 +1,438 @@
+# Arrow Maze Backend - NestJS 🎮
+
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <a href="http://nestjs.com/" target="blank">
+    <img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" />
+  </a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+<p align="center">
+  <img src="https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS" />
+  <img src="https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+<p align="center">
+  <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
+  <img src="https://img.shields.io/badge/TypeORM-FE0803?style=for-the-badge&logo=typeorm&logoColor=white" alt="TypeORM" />
+  <img src="https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens" alt="JWT" />
+</p>
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+<p align="center">
+  <img src="https://img.shields.io/badge/swagger-%2385EA2D.svg?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger" />
+  <img src="https://img.shields.io/badge/PlantUML-FBBA00?style=for-the-badge&logo=uml&logoColor=black" alt="PlantUML" />
+  <img src="https://img.shields.io/badge/LucidChart-FF7F2A?style=for-the-badge&logo=lucidchart&logoColor=white" alt="LucidChart" />
+</p>
 
-## Project setup
+---
+
+<div align="center">
+
+## 🛠️ Technology Stack
+
+| Category | Technologies |
+| :--- | :--- |
+| **Core Framework** | **NestJS** (Node.js) with **TypeScript** |
+| **Architecture** | 4-Layer **Clean Architecture** variant (course-defined) |
+| **ORM & Persistence** | **TypeORM** + **Supabase** (PostgreSQL) |
+| **Authentication** | **JWT** (Access Tokens) via `@nestjs/jwt` & Passport |
+| **API Documentation** | **Swagger** / OpenAPI (`@nestjs/swagger`) |
+| **UML Diagrams** | **PlantUML** (`.puml` source files in `/docs`) + **LucidChart** (visual renders) |
+| **Design Patterns** | 11 GoF patterns (Factory, Builder, Singleton, Composite, Adapter, Facade, Strategy, Observer, Command, State, Template Method) |
+
+</div>
+
+<br>
+
+---
+
+## 🛠️ Setup & Installation
+
+### 1. Prerequisites
+
+Make sure you have the following installed locally:
+
+- **Node.js** v20+
+- **npm** v10+
+- A **Supabase** project with a connection string (no local database required)
+
+### 2. Environment Configuration
 
 ```bash
-$ pnpm install
+cp .env.template .env
 ```
 
-## Compile and run the project
+Fill in the required variables:
+
+| Variable | Description |
+| :--- | :--- |
+| `DATABASE_URL` | Full Supabase connection string (found in Supabase → Project Settings → Database) |
+| `JWT_SECRET` | Secret key for signing access tokens |
+| `JWT_EXPIRATION` | Token TTL (e.g. `3600s`) |
+| `ADMIN_SEED_PASSWORD` | Password used by the level seeder for the admin account |
+
+### 3. Install & Run
 
 ```bash
-# development
-$ pnpm run start
+# Install dependencies
+npm install
 
-# watch mode
-$ pnpm run start:dev
+# Development (hot-reload)
+npm run start:dev
 
-# production mode
-$ pnpm run start:prod
+# Production build
+npm run build && npm run start:prod
 ```
 
-## Run tests
+> [!TIP]
+> On first run, TypeORM will sync the schema and the level seeder will populate the database automatically.
+
+---
+
+## 📍 Access Points
+
+Once the API is running:
+
+| Resource | URL |
+| :--- | :--- |
+| **REST API** | `http://localhost:3000/api` |
+| **Swagger UI** | `http://localhost:3000/api/docs` |
+
+> [!IMPORTANT]
+> All protected endpoints require a `Bearer <access_token>` header. Admin-only endpoints additionally require the `admin` role encoded in the token payload. Obtain a token via `POST /api/auth/login`.
+
+---
+
+## 🏗️ Architecture & Design
+
+The backend follows a **4-layer Clean Architecture** variant defined by the course specification. While inspired by Hexagonal Architecture and DDD, the layering convention is dictated by the academic assignment (*enunciado*) and takes precedence over strict theoretical purity.
+
+---
+
+### 🗺️ Layer Overview
+
+```
+┌──────────────────────────────────────────────────┐
+│         Layer 4 — Infrastructure                 │
+│   NestJS modules, TypeORM entities, DB config,   │
+│   Supabase connection, environment, seeder        │
+├──────────────────────────────────────────────────┤
+│         Layer 3 — Interfaces & Adapters          │
+│   Controllers, RepositoryImpl, Guards, DTOs,     │
+│   Mappers, Pipes, Interceptors                   │
+├──────────────────────────────────────────────────┤
+│         Layer 2 — Application (Use Cases)        │
+│   Use case handlers, Service orchestrators,      │
+│   Repository port interfaces, app DTOs           │
+├──────────────────────────────────────────────────┤
+│         Layer 1 — Domain                         │
+│   Aggregates, Entities, Value Objects,           │
+│   Domain Services, Repository port definitions   │
+└──────────────────────────────────────────────────┘
+```
+
+> [!NOTE]
+> `RepositoryImpl` classes reside in **Layer 3** (Interfaces & Adapters) by course design, even though they use TypeORM. This is an intentional incongruency with traditional Clean Architecture — the enunciado takes precedence.
+
+---
+
+### 📂 Directory Structure
+
+#### 🟡 Layer 1 — Domain
+
+Pure business logic. Zero dependency on frameworks or infrastructure.
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+📂 src/domain/
+├── 📂 aggregates/        # Aggregate roots (e.g. User, Level, Score)
+├── 📂 entities/          # Domain entities with identity
+├── 📂 value-objects/     # Immutable, self-validating VOs (UserId, UserRole, ArrowCell…)
+├── 📂 domain-services/   # Logic spanning multiple aggregates (e.g. BestScoreConflictResolver)
+└── 📂 repositories/      # Repository port interfaces (contracts only — no implementation)
 ```
 
-## Deployment
+**Key design decisions:**
+- Value Object constructors are **private**. Instances are created exclusively through static factory methods (e.g. `UserRole.player()`, `UserRole.admin()`).
+- Aggregates own their Value Object creation internally — no public `create()` on VOs.
+- `ArrowCell` is modeled as a single object with a list of directional positions; graph nodes are cells with typed directional edges.
+- Level definitions are stored as **JSON** in the database.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+#### 🟣 Layer 2 — Application
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Orchestrates domain logic. Contains Use Cases and application-level port interfaces.
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+📂 src/application/
+├── 📂 use-cases/         # One handler per use case (register, login, submit-score, etc.)
+├── 📂 services/          # Orchestrators that combine multiple use cases or domain services
+├── 📂 ports/             # Application-level port interfaces (e.g. IHashingService)
+└── 📂 dtos/              # Internal data transfer objects
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+#### 🔵 Layer 3 — Interfaces & Adapters
 
-## Resources
+Bridges the outside world with the application core.
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+📂 src/interfaces/
+├── 📂 controllers/       # NestJS route controllers
+├── 📂 repositories/      # RepositoryImpl classes (TypeORM — placed here per enunciado)
+├── 📂 guards/            # JwtAuthGuard, AdminRoleGuard
+├── 📂 pipes/             # Validation pipes
+├── 📂 interceptors/      # Response transformation
+├── 📂 mappers/           # Domain ↔ Persistence ↔ DTO mapping
+└── 📂 dtos/              # Request / Response DTOs (Swagger-annotated)
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+#### ⚙️ Layer 4 — Infrastructure
 
-## Support
+NestJS wiring, TypeORM config, Docker, and environment concerns.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+📂 src/infrastructure/
+├── 📂 database/          # TypeORM datasource config, TypeORM entities (ORM models)
+├── 📂 modules/           # NestJS feature modules and AppModule
+├── 📂 config/            # Environment validation (Joi or class-validator)
+└── 📂 seeders/           # Level seeder (populates the DB on first run)
+```
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 🧩 Design Patterns
 
-## License
+The following **11 GoF patterns** are implemented as an explicit academic requirement. Each is listed with its concrete location and purpose in this codebase.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+<div align="center">
+
+| Pattern | Category | Location | Purpose |
+| :--- | :--- | :--- | :--- |
+| **Factory** | Creational | `UserRole.player()` / `UserRole.admin()` | Encapsulates Value Object instantiation behind semantic static methods |
+| **Builder** | Creational | `LevelDefinitionBuilder` | Constructs complex level JSON structures step-by-step |
+| **Singleton** | Creational | TypeORM `DataSource`, `JwtService` | Ensures single shared instances of infrastructure services |
+| **Composite** | Structural | `ArrowMazeGrid` (cells + directional edges) | Treats individual cells and the full grid uniformly |
+| **Adapter** | Structural | `RepositoryImpl` classes (Layer 3) | Wraps TypeORM APIs behind domain repository port interfaces |
+| **Facade** | Structural | `LeaderboardService` | Exposes a single unified interface over score querying, conflict resolution, and ranking |
+| **Strategy** | Behavioral | `BestScoreConflictResolver` | Pluggable algorithm for resolving duplicate score submissions per player per level |
+| **Observer** | Behavioral | Domain Events (score submitted, level completed) | Decouples side-effect logic from core use cases |
+| **Command** | Behavioral | Use case handler objects (one command per use case) | Encapsulates a request as an object, enabling deferred or queued execution |
+| **State** | Behavioral | `PlayerProgress` aggregate states | Models the lifecycle of player progress (not started → in progress → completed) |
+| **Template Method** | Behavioral | `BaseUseCase` abstract handler | Defines the skeleton of a use case execution, deferring steps to subclasses |
+
+</div>
+
+---
+
+## 🔐 Auth Flow
+
+```mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'actorLineColor': '#3b82f6',
+    'actorTextColor': '#000000',
+    'noteTextColor': '#000000',
+    'signalTextColor': '#000000',
+    'mainBkg': '#FFFFFF'
+  }
+}}%%
+
+sequenceDiagram
+    autonumber
+
+    participant Client as 📱 Client (Flutter)
+    participant Ctrl  as 🔵 AuthController
+    participant UC    as 🟣 LoginUseCase
+    participant Repo  as 🟣 IUserRepository
+    participant Hash  as 🟣 IHashingService
+    participant JWT   as ⚙️ JwtService
+
+    Client->>Ctrl: POST /auth/login { email, password }
+
+    rect rgb(243, 229, 245)
+        Note over Ctrl, JWT: AUTHENTICATION PIPELINE
+        Ctrl->>UC: execute(loginDto)
+
+        UC->>Repo: findByEmail(email)
+        Repo-->>UC: User aggregate (or null)
+
+        alt User not found
+            UC-->>Ctrl: 401 Unauthorized
+        else User found
+            UC->>Hash: compare(password, user.passwordHash)
+            Hash-->>UC: boolean
+
+            alt Invalid password
+                UC-->>Ctrl: 401 Unauthorized
+            else Valid password
+                UC->>JWT: sign({ sub: userId, role: userRole })
+                JWT-->>UC: accessToken
+                UC-->>Ctrl: { accessToken }
+            end
+        end
+    end
+
+    Ctrl-->>Client: 200 OK { accessToken }
+```
+
+---
+
+## 📊 Score Submission Flow
+
+```mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'actorLineColor': '#10b981',
+    'actorTextColor': '#000000',
+    'noteTextColor': '#000000',
+    'signalTextColor': '#000000',
+    'mainBkg': '#FFFFFF'
+  }
+}}%%
+
+sequenceDiagram
+    autonumber
+
+    participant Client  as 📱 Client (Flutter)
+    participant Guard   as 🔵 JwtAuthGuard
+    participant Ctrl    as 🔵 ScoreController
+    participant UC      as 🟣 SubmitScoreUseCase
+    participant Strat   as 🟡 BestScoreConflictResolver
+    participant Repo    as 🔵 ScoreRepositoryImpl
+
+    Client->>Guard: POST /scores { levelId, moves, timeMs } + Bearer token
+    Guard-->>Ctrl: Injects authenticated user
+
+    rect rgb(230, 255, 244)
+        Note over Ctrl, Repo: SCORE SUBMISSION PIPELINE
+        Ctrl->>UC: execute(submitScoreDto, userId)
+
+        UC->>Repo: findBestByUserAndLevel(userId, levelId)
+        Repo-->>UC: existingScore (or null)
+
+        UC->>Strat: resolve(existingScore, newScore)
+        Note over Strat: Keeps the score with fewer moves. Ties broken by lowest timeMs
+
+        Strat-->>UC: scoreToKeep
+
+        alt New score is better
+            UC->>Repo: save(newScore)
+        else Existing score stands
+            Note over UC: No write performed
+        end
+
+        UC-->>Ctrl: ScoreResponseDto
+    end
+
+    Ctrl-->>Client: 201 Created | 200 OK
+```
+
+> [!WARNING]
+> **Score Integrity — Known Limitation:** Score values are trusted as-is from the client. The server performs no server-side replay or move validation. See the [Known Limitations](#️-known-limitations--future-work) section for documented mitigations.
+
+---
+
+## 📡 API Endpoints
+
+A complete interactive reference is available in **Swagger UI** at `http://localhost:3000/api/docs` once the API is running.
+
+<div align="center">
+
+### Auth
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Public | Register a new player account |
+| `POST` | `/api/auth/login` | Public | Authenticate and receive a JWT |
+
+### Levels
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/levels` | Public | List all available levels |
+| `GET` | `/api/levels/:id` | Public | Get a single level definition |
+| `POST` | `/api/levels` | Admin | Create a new level |
+| `PATCH` | `/api/levels/:id` | Admin | Update a level definition |
+| `DELETE` | `/api/levels/:id` | Admin | Delete a level |
+
+### Scores
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/scores` | Player | Submit a completed level score |
+| `GET` | `/api/scores/me` | Player | Get authenticated player's score history |
+
+### Leaderboard
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/leaderboard` | Public | Global leaderboard (best score per player per level) |
+| `GET` | `/api/leaderboard/:levelId` | Public | Level-specific leaderboard |
+
+</div>
+
+---
+
+## 📁 UML Diagrams
+
+Architectural diagrams are maintained in two formats:
+
+- **PlantUML** (`.puml`) — source files stored in `/docs`, version-controlled alongside the codebase.
+- **LucidChart** — visual renders for each layer, linked below for interactive exploration.
+
+| File | Scope | LucidChart |
+| :--- | :--- | :--- |
+| `backend_layer1_domain.puml` | Domain — Aggregates, Entities, Value Objects, Repository ports | _(link)_ |
+| `backend_layer2_application.puml` | Application — Use Cases, Service interfaces, Application ports | _(link)_ |
+| `backend_layer3_adapters.puml` | Interfaces & Adapters — Controllers, RepositoryImpl, Guards, Mappers | _(link)_ |
+| `backend_layer4_infrastructure.puml` | Infrastructure — TypeORM entities, NestJS modules, DB config | _(link)_ |
+| `backend_complete.puml` | Full cross-layer diagram with dependency arrows | _(link)_ |
+
+> [!TIP]
+> Install the **PlantUML** extension for VS Code (`jebbs.plantuml`) to preview `.puml` files directly in the editor. LucidChart links provide an interactive, shareable view for reviewers.
+
+---
+
+## ⚠️ Known Limitations / Future Work
+
+These limitations are documented deliberately. They represent trade-offs accepted within the academic project scope and are candidates for hardening in a production context.
+
+### 🔓 1. Client-Trusted Scores
+
+**Current behavior:** The `SubmitScoreUseCase` trusts the `moves` and `timeMs` values received from the Flutter client without server-side verification.
+
+**Risk:** A malicious client can submit arbitrarily low scores and top the leaderboard.
+
+**Proposed mitigations (not implemented):**
+
+- **HMAC signing** — Client signs the score payload with a shared secret; server verifies the signature before persistence.
+- **Server-side replay** — Store the full move sequence and re-execute it server-side to derive the canonical score.
+- **Score floor/ceiling limits** — Reject scores statistically outside the feasible range (e.g. `moves < minimumPossibleMoves` for a given level).
+
+### 🌐 2. Global Leaderboard Only
+
+**Current behavior:** The leaderboard is global; there is no friends list, regional ranking, or time-windowed leaderboard (e.g. weekly).
+
+**Future work:** Introduce leaderboard segments and a `TimeWindow` Value Object to scope ranking queries.
+
+### 🔄 3. No Token Refresh
+
+**Current behavior:** Only short-lived access tokens are issued. There is no refresh token flow.
+
+**Future work:** Implement a `RefreshToken` entity and a `POST /auth/refresh` endpoint following the rotation pattern.
+
+### 🎮 4. Game Logic is Fully Client-Side
+
+**By design:** The Flutter client runs all Arrow Maze solving logic. The backend is purely a data and auth layer.
+
+**Trade-off:** This simplifies the backend considerably but means the server cannot independently validate whether a level was legitimately solved.
+
+---
+
+## 🔗 Related Resources
+
+> [!IMPORTANT]
+> **API Specification (Swagger)**
+> For full endpoint contracts, request/response schemas, and authentication examples, run the stack and navigate to:
+>
+> 📂 `http://localhost:3000/api/docs`
