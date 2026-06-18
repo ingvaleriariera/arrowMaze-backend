@@ -1,8 +1,9 @@
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 import { UserId } from '../value-objects/user-id.vo';
+import { PlayerProgress } from '../aggregates/player-progress.aggregate';
 
-// TODO: Import PlayerProgress entity once it's created in Capa 2
+export const PLAYER_PROGRESS_REPOSITORY = 'PLAYER_PROGRESS_REPOSITORY';
+
 export interface IPlayerProgressRepository {
-  save(progress: any): Promise<void>;
-  findByUserId(userId: UserId): Promise<any | null>;
+  save(progress: PlayerProgress): Promise<void>;
+  findByUserId(userId: UserId): Promise<PlayerProgress | null>;
 }

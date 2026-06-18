@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './infrastructure/modules/auth.module';
 import { LevelModule } from './infrastructure/modules/level.module';
+import { ProgressModule } from './infrastructure/modules/progress.module';
 import { DatabaseSeeder } from './infrastructure/seeders/database.seeder';
 
 @Module({
@@ -31,6 +32,7 @@ import { DatabaseSeeder } from './infrastructure/seeders/database.seeder';
     }),
     AuthModule,
     LevelModule,
+    ProgressModule,
   ],
 })
 export class AppModule implements OnModuleInit {
