@@ -1,7 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit, Inject } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './infrastructure/modules/auth.module';
+import { LevelModule } from './infrastructure/modules/level.module';
+import { DatabaseSeeder } from './infrastructure/seeders/database.seeder';
 
 @Module({
   imports: [
@@ -28,6 +30,13 @@ import { AuthModule } from './infrastructure/modules/auth.module';
       }),
     }),
     AuthModule,
+    LevelModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(private readonly databaseSeeder: DatabaseSeeder) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.databaseSeeder.seed();
+  }
+}
