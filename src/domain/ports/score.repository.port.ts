@@ -1,7 +1,9 @@
 import { LevelId } from '../value-objects/level-id.vo';
+import { ScoreEntry } from '../aggregates/score-entry.aggregate';
 
-// TODO: Import ScoreEntry entity once it's created in Capa 2
+export const SCORE_REPOSITORY = 'SCORE_REPOSITORY';
+
 export interface IScoreRepository {
-  save(entry: any): Promise<void>;
-  findTopByLevel(levelId: LevelId, limit: number): Promise<any[]>;
+  save(entry: ScoreEntry): Promise<void>;
+  findTopByLevel(levelId: LevelId, limit: number): Promise<ScoreEntry[]>;
 }

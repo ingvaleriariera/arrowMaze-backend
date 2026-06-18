@@ -1,11 +1,12 @@
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 import { Email } from '../value-objects/email.vo';
 import { UserId } from '../value-objects/user-id.vo';
+import { User } from '../aggregates/user.aggregate';
 
-// TODO: Import User entity once it's created in Capa 2
+export const USER_REPOSITORY = 'USER_REPOSITORY';
+
 export interface IUserRepository {
-  save(user: any): Promise<void>;
-  findByEmail(email: Email): Promise<any | null>;
-  findById(id: UserId): Promise<any | null>;
+  save(user: User): Promise<void>;
+  findByEmail(email: Email): Promise<User | null>;
+  findById(id: UserId): Promise<User | null>;
   existsByEmail(email: Email): Promise<boolean>;
 }

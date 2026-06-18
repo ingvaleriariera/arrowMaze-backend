@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './infrastructure/modules/auth.module';
 import { LevelModule } from './infrastructure/modules/level.module';
 import { ProgressModule } from './infrastructure/modules/progress.module';
+import { ScoreModule } from './infrastructure/modules/score.module';
+import { LeaderboardModule } from './infrastructure/modules/leaderboard.module';
 import { DatabaseSeeder } from './infrastructure/seeders/database.seeder';
 
 @Module({
@@ -33,6 +35,8 @@ import { DatabaseSeeder } from './infrastructure/seeders/database.seeder';
     AuthModule,
     LevelModule,
     ProgressModule,
+    ScoreModule,
+    LeaderboardModule,
   ],
 })
 export class AppModule implements OnModuleInit {

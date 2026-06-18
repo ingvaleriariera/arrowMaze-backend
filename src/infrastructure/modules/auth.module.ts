@@ -12,6 +12,7 @@ import { JwtTokenProviderImpl } from '../services/jwt-token-provider.impl';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PASSWORD_ENCODER } from '../../application/ports/password-encoder.port';
 import { JWT_TOKEN_PROVIDER } from '../../application/ports/jwt-token-provider.port';
+import { USER_REPOSITORY } from '../../domain/ports/user.repository.port';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity])],
@@ -21,6 +22,10 @@ import { JWT_TOKEN_PROVIDER } from '../../application/ports/jwt-token-provider.p
     LoginUserUseCase,
     {
       provide: 'IUserRepository',
+      useClass: UserRepositoryImpl,
+    },
+    {
+      provide: USER_REPOSITORY,
       useClass: UserRepositoryImpl,
     },
     UserEntityMapper,
@@ -35,6 +40,6 @@ import { JWT_TOKEN_PROVIDER } from '../../application/ports/jwt-token-provider.p
     },
     JwtAuthGuard,
   ],
-  exports: [JwtAuthGuard, JWT_TOKEN_PROVIDER],
+  exports: [JwtAuthGuard, JWT_TOKEN_PROVIDER, USER_REPOSITORY],
 })
 export class AuthModule {}

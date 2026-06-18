@@ -30,5 +30,6 @@ import { AuthModule } from './auth.module';
     PlayerProgressEntityMapper,
     ProgressMapper,
   ],
+  exports: [PLAYER_PROGRESS_REPOSITORY],
 })
 export class ProgressModule {}
