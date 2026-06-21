@@ -21,6 +21,13 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
+  // Habilita CORS para que Flutter web (Chrome) pueda consumir la API
+  app.enableCors({
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type,Authorization',
+  });
+
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
