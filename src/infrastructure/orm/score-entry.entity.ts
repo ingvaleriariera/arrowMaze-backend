@@ -6,17 +6,17 @@ import { Entity, PrimaryColumn, Column, Index } from 'typeorm';
 @Index(['levelId', 'score'])
 export class ScoreEntryEntity {
   @PrimaryColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column('uuid')
-  userId: string;
+  userId!: string;
 
   @Column('varchar', { length: 50 })
-  levelId: string;
+  levelId!: string;
 
   @Column('integer')
-  score: number;
+  score!: number;
 
   @Column('timestamp')
-  achievedAt: Date;
+  achievedAt!: Date;
 }

@@ -5,14 +5,14 @@ import { LevelProgressEmbedded } from './level-progress.embedded';
 @Index(['userId'])
 export class PlayerProgressEntity {
   @PrimaryColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column('uuid')
-  userId: string;
+  userId!: string;
 
   @Column('simple-json')
-  levels: LevelProgressEmbedded[];
+  levels!: LevelProgressEmbedded[];
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

@@ -10,20 +10,20 @@ import {
 @Unique(['email'])
 export class UserEntity {
   @PrimaryColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column('varchar', { length: 255 })
-  email: string;
+  email!: string;
 
   @Column('varchar', { length: 30 })
-  username: string;
+  username!: string;
 
   @Column('text')
-  passwordHash: string;
+  passwordHash!: string;
 
   @Column('varchar', { length: 10 })
-  role: string;
+  role!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

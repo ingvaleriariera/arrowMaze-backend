@@ -11,11 +11,11 @@ export const LEVELS_SEED: LevelSeedData[] = [
     difficulty: 'easy',
     moveLimit: 15,
     boardLayout: JSON.stringify({
-      grid: [
-        [0, 1, 0, 0],
-        [1, 0, 1, 0],
-        [0, 1, 0, 1],
-        [0, 0, 1, 0],
+      grid:[
+        [1,1,1,1],
+        [1,1,1,1],
+        [1,1,1,1],
+        [1,1,1,1]
       ],
       rows: 4,
       cols: 4,
@@ -26,14 +26,13 @@ export const LEVELS_SEED: LevelSeedData[] = [
     difficulty: 'easy',
     moveLimit: 14,
     boardLayout: JSON.stringify({
-      grid: [
-        [1, 0, 0, 0],
-        [0, 1, 1, 0],
-        [0, 1, 0, 1],
-        [0, 0, 1, 0],
+      grid:[
+        [0,1,0],
+        [1,1,1],
+        [0,1,0]
       ],
-      rows: 4,
-      cols: 4,
+      rows: 3,
+      cols: 3,
     }),
   },
   {
@@ -87,15 +86,16 @@ export const LEVELS_SEED: LevelSeedData[] = [
     difficulty: 'medium',
     moveLimit: 12,
     boardLayout: JSON.stringify({
-      grid: [
-        [1, 0, 1, 0, 0],
-        [0, 1, 0, 1, 0],
-        [1, 0, 1, 0, 1],
-        [0, 1, 0, 1, 0],
-        [0, 0, 1, 0, 1],
+      grid:[
+        [0,1,1,0,1,1,0],
+        [1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1],
+        [0,1,1,1,1,1,0],
+        [0,0,1,1,1,0,0],
+        [0,0,0,1,0,0,0]
       ],
-      rows: 5,
-      cols: 5,
+      rows: 6,
+      cols: 7,
     }),
   },
   {
