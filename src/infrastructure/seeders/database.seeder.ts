@@ -18,25 +18,30 @@ export class DatabaseSeeder {
 
   async seed(): Promise<void> {
     let seededCount = 0;
+    let updatedCount = 0;
 
     for (const levelData of LEVELS_SEED) {
       const levelId = LevelId.create(levelData.id);
       const existingLevel = await this.levelRepository.findById(levelId);
 
-      if (!existingLevel) {
-        this.levelConfigBuilder
-          .setId(levelData.id)
-          .setDifficulty(levelData.difficulty)
-          .setMoveLimit(levelData.moveLimit)
-          .setBoardLayout(levelData.boardLayout);
+      this.levelConfigBuilder
+        .setId(levelData.id)
+        .setDifficulty(levelData.difficulty)
+        .setMoveLimit(levelData.moveLimit)
+        .setBoardLayout(levelData.boardLayout);
 
-        const level = this.levelConfigBuilder.build();
-        await this.levelRepository.save(level);
+      const level = this.levelConfigBuilder.build();
+      await this.levelRepository.save(level);
+
+      if (!existingLevel) {
         seededCount++;
-        this.levelConfigBuilder.reset();
+      } else {
+        updatedCount++;
       }
+
+      this.levelConfigBuilder.reset();
     }
 
-    this.logger.log(`Database seeding completed. ${seededCount} levels seeded.`);
+    this.logger.log(`Database seeding completed. ${seededCount} levels seeded, ${updatedCount} levels updated.`);
   }
 }
