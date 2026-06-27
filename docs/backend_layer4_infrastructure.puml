@@ -1,0 +1,370 @@
+@startuml backend_layer4_infrastructure
+title Arrow Maze Backend — Capa 4: Frameworks e Infraestructura
+
+skinparam backgroundColor #FFFFFF
+skinparam class {
+  BackgroundColor #E8EAF6
+  BorderColor #283593
+  HeaderBackgroundColor #3949AB
+  HeaderFontColor #FFFFFF
+  FontColor #000000
+  ArrowColor #333333
+}
+skinparam interface {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+  HeaderBackgroundColor #1E88E5
+  HeaderFontColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF9C4
+  BorderColor #B8860B
+}
+
+' ─────────────────────────────────────────
+' EXTERNAL INFRASTRUCTURE
+' ─────────────────────────────────────────
+
+class PostgreSQL <<External DB>> #E0F7FA {
+  + users: Table
+  + player_progress: Table
+  + level_definitions: Table
+  + score_entries: Table
+}
+
+package "External Libraries" <<External>> #F3E5F5 {
+  class BcryptLibrary <<npm: bcrypt>> #F3E5F5 {
+    + hash(data: string, saltRounds: int): Promise<string>
+    + compare(data: string, hash: string): Promise<boolean>
+  }
+
+  class JsonWebTokenLibrary <<npm: jsonwebtoken>> #F3E5F5 {
+    + sign(payload: object, secret: string, options: object): string
+    + verify(token: string, secret: string): object
+  }
+
+  class NestJSFramework <<npm: @nestjs/core>> #F3E5F5 {
+    + Module
+    + Controller
+    + Injectable
+    + Guard
+    + Interceptor
+    + ExceptionFilter
+  }
+
+  class TypeORMLibrary <<npm: typeorm>> #F3E5F5 {
+    + Entity
+    + Repository
+    + DataSource
+    + Column
+    + PrimaryGeneratedColumn
+  }
+
+  class SwaggerLibrary <<npm: @nestjs/swagger>> #F3E5F5 {
+    + ApiProperty
+    + ApiOperation
+    + DocumentBuilder
+    + SwaggerModule
+  }
+}
+
+' ─────────────────────────────────────────
+' TYPEORM ENTITIES
+' ─────────────────────────────────────────
+
+class UserEntity <<TypeORM Entity>> {
+  + id: string
+  + email: string
+  + username: string
+  + passwordHash: string
+  + role: string
+  + createdAt: Date
+}
+
+class PlayerProgressEntity <<TypeORM Entity>> {
+  + id: string
+  + userId: string
+  + updatedAt: Date
+  + levels: LevelProgressEmbedded[]
+}
+
+class LevelProgressEmbedded <<TypeORM Embedded>> {
+  + levelId: string
+  + bestScore: int
+  + completedAt: Date
+}
+
+class LevelDefinitionEntity <<TypeORM Entity>> {
+  + id: string
+  + difficulty: string
+  + moveLimit: int
+  + boardLayout: string
+  + version: int
+}
+
+class ScoreEntryEntity <<TypeORM Entity>> {
+  + id: string
+  + userId: string
+  + levelId: string
+  + score: int
+  + achievedAt: Date
+}
+
+' ─────────────────────────────────────────
+' NESTJS MODULES
+' ─────────────────────────────────────────
+
+class AppModule <<NestJS Module>> {
+  + imports: TypeOrmModule, AuthModule, ProgressModule
+  + imports: ScoreModule, LeaderboardModule, LevelModule
+}
+
+class AuthModule <<NestJS Module>> {
+  + controllers: AuthController
+  + providers: RegisterUserUseCase, LoginUserUseCase
+  + providers: BcryptPasswordEncoder, JwtTokenProviderImpl
+  + providers: UserRepositoryImpl, UserEntityMapper, UserMapper
+}
+
+class ProgressModule <<NestJS Module>> {
+  + controllers: ProgressController
+  + providers: SyncProgressUseCase, BestScoreConflictResolver
+  + providers: PlayerProgressRepositoryImpl
+  + providers: PlayerProgressEntityMapper, ProgressMapper
+}
+
+class ScoreModule <<NestJS Module>> {
+  + controllers: ScoreController
+  + providers: SubmitScoreUseCase, LeaderboardPolicy
+  + providers: ScoreRepositoryImpl, PlayerProgressRepositoryImpl
+  + providers: ScoreEntryEntityMapper, ScoreMapper
+}
+
+class LeaderboardModule <<NestJS Module>> {
+  + controllers: LeaderboardController
+  + providers: GetLeaderboardUseCase
+  + providers: ScoreRepositoryImpl, UserRepositoryImpl
+  + providers: ScoreEntryEntityMapper, UserEntityMapper, LeaderboardMapper
+}
+
+class LevelModule <<NestJS Module>> {
+  + controllers: LevelController
+  + providers: GetLevelsUseCase, UpdateLevelConfigurationUseCase
+  + providers: LevelDefinitionRepositoryImpl, LevelConfigBuilder
+  + providers: LevelDefinitionEntityMapper, LevelMapper
+}
+
+' ─────────────────────────────────────────
+' AOP — ASPECTOS TRANSVERSALES
+' ─────────────────────────────────────────
+
+class LoggingInterceptor <<Interceptor, AOP>> {
+  - logger: Logger
+  --
+  + intercept(context: ExecutionContext, next: CallHandler): Observable<any>
+}
+
+note right of LoggingInterceptor
+  Aspecto AOP: Logging
+  Registra entrada, salida y duración
+  de cada request HTTP sin contaminar
+  los casos de uso.
+  Aplica a todos los controllers via
+  APP_INTERCEPTOR global.
+end note
+
+class HttpExceptionFilter <<ExceptionFilter, AOP>> {
+  --
+  + catch(exception: HttpException, host: ArgumentsHost): void
+}
+
+note right of HttpExceptionFilter
+  Aspecto AOP: Manejo de Excepciones
+  Centraliza el manejo de errores HTTP
+  y retorna respuestas consistentes
+  sin que los casos de uso conozcan
+  los códigos HTTP.
+end note
+
+class JwtAuthGuard <<Guard, AOP>> {
+  - jwtTokenProvider: IJwtTokenProvider
+  --
+  + canActivate(context: ExecutionContext): boolean
+}
+
+note right of JwtAuthGuard
+  Aspecto AOP: Seguridad
+  Verifica el JWT en cada request
+  antes de que llegue al Controller.
+  Protege todos los endpoints
+  excepto /auth/register y /auth/login.
+end note
+
+class AdminRoleGuard <<Guard, AOP>> {
+  --
+  + canActivate(context: ExecutionContext): boolean
+}
+
+note right of AdminRoleGuard
+  Aspecto AOP: Autorización
+  Verifica que el usuario tenga
+  role = admin antes de permitir
+  llamadas a UpdateLevelConfiguration.
+  Se aplica solo en LevelController
+  + updateLevel().
+end note
+
+' ─────────────────────────────────────────
+' CONFIG
+' ─────────────────────────────────────────
+
+class TypeOrmConfig <<Configuration>> {
+  + type: string
+  + host: string
+  + port: int
+  + username: string
+  + password: string
+  + database: string
+  + entities: Entity[]
+  + synchronize: boolean
+  + migrations: Migration[]
+}
+
+class DatabaseSeeder <<Seeder>> {
+  - levelRepository: ILevelDefinitionRepository
+  - levelBuilder: LevelConfigBuilder
+  --
+  + seed(): Promise<void>
+  + loadFromJson(path: string): LevelDefinition[]
+}
+
+note right of DatabaseSeeder
+  Carga los 15 niveles iniciales
+  en la BD al arrancar la app
+  si no existen todavía.
+  Usa LevelConfigBuilder para construir
+  cada LevelDefinition desde JSON.
+end note
+
+class SwaggerConfig <<Configuration>> {
+  + title: string
+  + description: string
+  + version: string
+  --
+  + {static} setup(app: INestApplication): void
+}
+
+' ─────────────────────────────────────────
+' REFERENCIAS CAPAS 1, 2 Y 3
+' ─────────────────────────────────────────
+
+interface IJwtTokenProvider <<Port, Layer 2>> {}
+interface ILevelDefinitionRepository <<Port, Layer 1>> {}
+class LevelConfigBuilder <<Builder, Layer 3>> {}
+class LeaderboardPolicy <<Domain Service, Layer 1>> {}
+class BestScoreConflictResolver <<Service, Layer 3>> {}
+
+' ─────────────────────────────────────────
+' RELACIONES — External Libraries → Implementaciones
+' ─────────────────────────────────────────
+
+AuthModule ..> BcryptLibrary : <<uses bcrypt>>
+AuthModule ..> JsonWebTokenLibrary : <<uses jwt>>
+AppModule ..> NestJSFramework : <<powered by>>
+AppModule ..> TypeORMLibrary : <<powered by>>
+SwaggerConfig ..> SwaggerLibrary : <<uses>>
+
+' ─────────────────────────────────────────
+' RELACIONES — TypeORM Entities → PostgreSQL
+' ─────────────────────────────────────────
+
+UserEntity ..> PostgreSQL : <<persists to users>>
+PlayerProgressEntity ..> PostgreSQL : <<persists to player_progress>>
+LevelDefinitionEntity ..> PostgreSQL : <<persists to level_definitions>>
+ScoreEntryEntity ..> PostgreSQL : <<persists to score_entries>>
+TypeOrmConfig ..> PostgreSQL : <<configures connection>>
+
+' ─────────────────────────────────────────
+' RELACIONES — TypeORM Entities
+' ─────────────────────────────────────────
+
+PlayerProgressEntity *-- "0..*" LevelProgressEmbedded : levels
+
+UserRepositoryImpl ..> UserEntity : <<persistence>>
+PlayerProgressRepositoryImpl ..> PlayerProgressEntity : <<persistence>>
+LevelDefinitionRepositoryImpl ..> LevelDefinitionEntity : <<persistence>>
+ScoreRepositoryImpl ..> ScoreEntryEntity : <<persistence>>
+
+UserEntityMapper ..> UserEntity : <<maps>>
+PlayerProgressEntityMapper ..> PlayerProgressEntity : <<maps>>
+LevelDefinitionEntityMapper ..> LevelDefinitionEntity : <<maps>>
+ScoreEntryEntityMapper ..> ScoreEntryEntity : <<maps>>
+
+' ─────────────────────────────────────────
+' RELACIONES — Módulos
+' ─────────────────────────────────────────
+
+AppModule *-- AuthModule
+AppModule *-- ProgressModule
+AppModule *-- ScoreModule
+AppModule *-- LeaderboardModule
+AppModule *-- LevelModule
+AppModule ..> TypeOrmConfig : configures
+
+' ─────────────────────────────────────────
+' RELACIONES — AOP
+' ─────────────────────────────────────────
+
+JwtAuthGuard --> IJwtTokenProvider : uses
+AppModule ..> LoggingInterceptor : global
+AppModule ..> HttpExceptionFilter : global
+AppModule ..> JwtAuthGuard : global
+LevelModule ..> AdminRoleGuard : scoped
+
+' ─────────────────────────────────────────
+' RELACIONES — Seeder y Config
+' ─────────────────────────────────────────
+
+AppModule ..> DatabaseSeeder : runs on startup
+DatabaseSeeder --> ILevelDefinitionRepository : uses
+DatabaseSeeder --> LevelConfigBuilder : uses
+AppModule ..> SwaggerConfig : setup
+ProgressModule ..> BestScoreConflictResolver : provides
+ScoreModule ..> LeaderboardPolicy : provides
+
+' ─────────────────────────────────────────
+' AGRUPACIONES
+' ─────────────────────────────────────────
+
+together {
+  class UserEntity
+  class PlayerProgressEntity
+  class LevelProgressEmbedded
+  class LevelDefinitionEntity
+  class ScoreEntryEntity
+}
+
+together {
+  class LoggingInterceptor
+  class HttpExceptionFilter
+  class JwtAuthGuard
+  class AdminRoleGuard
+}
+
+together {
+  class AuthModule
+  class ProgressModule
+  class ScoreModule
+  class LeaderboardModule
+  class LevelModule
+}
+
+together {
+  class BcryptLibrary
+  class JsonWebTokenLibrary
+  class NestJSFramework
+  class TypeORMLibrary
+  class SwaggerLibrary
+}
+
+@enduml

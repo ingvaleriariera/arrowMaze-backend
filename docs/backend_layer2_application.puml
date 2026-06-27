@@ -1,0 +1,271 @@
+@startuml backend_layer2_application
+title Arrow Maze Backend — Capa 2: Aplicación (Casos de Uso)
+
+skinparam backgroundColor #FFFFFF
+skinparam class {
+  BackgroundColor #E8F5E9
+  BorderColor #2E7D32
+  HeaderBackgroundColor #43A047
+  HeaderFontColor #FFFFFF
+  FontColor #000000
+  ArrowColor #333333
+}
+skinparam interface {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+  HeaderBackgroundColor #1E88E5
+  HeaderFontColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF9C4
+  BorderColor #B8860B
+}
+
+' ─────────────────────────────────────────
+' PORTS — Servicios externos (definidos aquí, implementados en Capa 4)
+' ─────────────────────────────────────────
+
+interface IPasswordEncoder <<Port>> {
+  + hash(raw: string): Promise<string>
+  + verify(raw: string, hashed: string): Promise<boolean>
+}
+
+interface IJwtTokenProvider <<Port>> {
+  + generateToken(userId: string, role: string): string
+  + verifyToken(token: string): JwtPayload
+}
+
+interface IConflictResolver <<Port>> {
+  + resolve(local: PlayerProgress, remote: PlayerProgress): PlayerProgress
+}
+
+' ─────────────────────────────────────────
+' DTOs de entrada y salida
+' ─────────────────────────────────────────
+
+class RegisterUserInput <<DTO>> {
+  + email: string
+  + username: string
+  + password: string
+}
+
+class RegisterUserOutput <<DTO>> {
+  + userId: string
+  + username: string
+  + token: string
+}
+
+class LoginUserInput <<DTO>> {
+  + email: string
+  + password: string
+}
+
+class LoginUserOutput <<DTO>> {
+  + userId: string
+  + username: string
+  + token: string
+}
+
+class SyncProgressInput <<DTO>> {
+  + userId: string
+  + levels: LevelProgressDTO[]
+}
+
+class SyncProgressOutput <<DTO>> {
+  + levels: LevelProgressDTO[]
+}
+
+class LevelProgressDTO <<DTO>> {
+  + levelId: string
+  + bestScore: int
+  + completedAt: string
+}
+
+class GetLeaderboardInput <<DTO>> {
+  + levelId: string
+  + limit: int
+}
+
+class GetLeaderboardOutput <<DTO>> {
+  + entries: LeaderboardEntryDTO[]
+}
+
+class LeaderboardEntryDTO <<DTO>> {
+  + rank: int
+  + username: string
+  + score: int
+  + achievedAt: string
+}
+
+class SubmitScoreInput <<DTO>> {
+  + userId: string
+  + levelId: string
+  + score: int
+}
+
+class SubmitScoreOutput <<DTO>> {
+  + accepted: boolean
+  + qualifiedForLeaderboard: boolean
+}
+
+class GetLevelsOutput <<DTO>> {
+  + levels: LevelSummaryDTO[]
+}
+
+class LevelSummaryDTO <<DTO>> {
+  + id: string
+  + difficulty: string
+  + moveLimit: int
+  + boardLayout: string
+  + version: int
+}
+
+class UpdateLevelInput <<DTO>> {
+  + levelId: string
+  + boardLayout: string
+  + moveLimit: int
+}
+
+class UpdateLevelOutput <<DTO>> {
+  + levelId: string
+  + version: int
+}
+
+class JwtPayload <<DTO>> {
+  + userId: string
+  + role: string
+  + iat: int
+  + exp: int
+}
+
+' ─────────────────────────────────────────
+' CASOS DE USO
+' ─────────────────────────────────────────
+
+class RegisterUserUseCase <<Use Case>> {
+  - userRepository: IUserRepository
+  - passwordEncoder: IPasswordEncoder
+  - jwtTokenProvider: IJwtTokenProvider
+  --
+  + execute(input: RegisterUserInput): Promise<RegisterUserOutput>
+}
+
+class LoginUserUseCase <<Use Case>> {
+  - userRepository: IUserRepository
+  - passwordEncoder: IPasswordEncoder
+  - jwtTokenProvider: IJwtTokenProvider
+  --
+  + execute(input: LoginUserInput): Promise<LoginUserOutput>
+}
+
+class SyncProgressUseCase <<Use Case>> {
+  - progressRepository: IPlayerProgressRepository
+  - conflictResolver: IConflictResolver
+  --
+  + execute(input: SyncProgressInput): Promise<SyncProgressOutput>
+}
+
+class GetLeaderboardUseCase <<Use Case>> {
+  - scoreRepository: IScoreRepository
+  - userRepository: IUserRepository
+  --
+  + execute(input: GetLeaderboardInput): Promise<GetLeaderboardOutput>
+}
+
+class SubmitScoreUseCase <<Use Case>> {
+  - scoreRepository: IScoreRepository
+  - progressRepository: IPlayerProgressRepository
+  - leaderboardPolicy: LeaderboardPolicy
+  --
+  + execute(input: SubmitScoreInput): Promise<SubmitScoreOutput>
+}
+
+class GetLevelsUseCase <<Use Case>> {
+  - levelRepository: ILevelDefinitionRepository
+  --
+  + execute(): Promise<GetLevelsOutput>
+}
+
+class UpdateLevelConfigurationUseCase <<Use Case>> {
+  - levelRepository: ILevelDefinitionRepository
+  --
+  + execute(input: UpdateLevelInput): Promise<UpdateLevelOutput>
+}
+
+' ─────────────────────────────────────────
+' REFERENCIAS A CAPA 1 (solo para mostrar dependencias)
+' ─────────────────────────────────────────
+
+interface IUserRepository <<Port, Layer 1>> {
+  + save(user: User): Promise<void>
+  + findByEmail(email: Email): Promise<User | null>
+  + findById(id: UserId): Promise<User | null>
+  + existsByEmail(email: Email): Promise<boolean>
+}
+
+interface IPlayerProgressRepository <<Port, Layer 1>> {
+  + save(progress: PlayerProgress): Promise<void>
+  + findByUserId(userId: UserId): Promise<PlayerProgress | null>
+}
+
+interface ILevelDefinitionRepository <<Port, Layer 1>> {
+  + save(level: LevelDefinition): Promise<void>
+  + findById(id: LevelId): Promise<LevelDefinition | null>
+  + findAll(): Promise<LevelDefinition[]>
+}
+
+interface IScoreRepository <<Port, Layer 1>> {
+  + save(entry: ScoreEntry): Promise<void>
+  + findTopByLevel(levelId: LevelId, limit: int): Promise<ScoreEntry[]>
+}
+
+class LeaderboardPolicy <<Domain Service, Layer 1>> {
+  + qualifiesForLeaderboard(newScore: Score, currentBest: Score): boolean
+}
+
+' ─────────────────────────────────────────
+' RELACIONES — Casos de uso → Puertos
+' ─────────────────────────────────────────
+
+RegisterUserUseCase --> IUserRepository : uses
+RegisterUserUseCase --> IPasswordEncoder : uses
+RegisterUserUseCase --> IJwtTokenProvider : uses
+RegisterUserUseCase ..> RegisterUserInput : input
+RegisterUserUseCase ..> RegisterUserOutput : output
+
+LoginUserUseCase --> IUserRepository : uses
+LoginUserUseCase --> IPasswordEncoder : uses
+LoginUserUseCase --> IJwtTokenProvider : uses
+LoginUserUseCase ..> LoginUserInput : input
+LoginUserUseCase ..> LoginUserOutput : output
+
+SyncProgressUseCase --> IPlayerProgressRepository : uses
+SyncProgressUseCase --> IConflictResolver : uses
+SyncProgressUseCase ..> SyncProgressInput : input
+SyncProgressUseCase ..> SyncProgressOutput : output
+SyncProgressOutput *-- "0..*" LevelProgressDTO
+SyncProgressInput *-- "0..*" LevelProgressDTO
+
+GetLeaderboardUseCase --> IScoreRepository : uses
+GetLeaderboardUseCase --> IUserRepository : uses
+GetLeaderboardUseCase ..> GetLeaderboardInput : input
+GetLeaderboardUseCase ..> GetLeaderboardOutput : output
+GetLeaderboardOutput *-- "0..*" LeaderboardEntryDTO
+
+SubmitScoreUseCase --> IScoreRepository : uses
+SubmitScoreUseCase --> IPlayerProgressRepository : uses
+SubmitScoreUseCase --> LeaderboardPolicy : uses
+SubmitScoreUseCase ..> SubmitScoreInput : input
+SubmitScoreUseCase ..> SubmitScoreOutput : output
+
+GetLevelsUseCase --> ILevelDefinitionRepository : uses
+GetLevelsUseCase ..> GetLevelsOutput : output
+GetLevelsOutput *-- "0..*" LevelSummaryDTO
+
+UpdateLevelConfigurationUseCase --> ILevelDefinitionRepository : uses
+UpdateLevelConfigurationUseCase ..> UpdateLevelInput : input
+UpdateLevelConfigurationUseCase ..> UpdateLevelOutput : output
+
+IJwtTokenProvider ..> JwtPayload : produces
+
+@enduml

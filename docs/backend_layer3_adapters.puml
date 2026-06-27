@@ -1,0 +1,422 @@
+@startuml backend_layer3_adapters
+title Arrow Maze Backend — Capa 3: Adaptadores de Interfaz
+
+skinparam backgroundColor #FFFFFF
+skinparam class {
+  BackgroundColor #FCE4EC
+  BorderColor #880E4F
+  HeaderBackgroundColor #E91E63
+  HeaderFontColor #FFFFFF
+  FontColor #000000
+  ArrowColor #333333
+}
+skinparam interface {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+  HeaderBackgroundColor #1E88E5
+  HeaderFontColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF9C4
+  BorderColor #B8860B
+}
+
+' ─────────────────────────────────────────
+' CONTROLLERS
+' ─────────────────────────────────────────
+
+class AuthController <<Controller>> {
+  - registerUseCase: RegisterUserUseCase
+  - loginUseCase: LoginUserUseCase
+  --
+  + register(body: RegisterRequestDTO): Promise<RegisterResponseDTO>
+  + login(body: LoginRequestDTO): Promise<LoginResponseDTO>
+}
+
+class ProgressController <<Controller>> {
+  - syncProgressUseCase: SyncProgressUseCase
+  --
+  + sync(userId: string, body: SyncRequestDTO): Promise<SyncResponseDTO>
+}
+
+class ScoreController <<Controller>> {
+  - submitScoreUseCase: SubmitScoreUseCase
+  --
+  + submit(body: SubmitScoreRequestDTO): Promise<SubmitScoreResponseDTO>
+}
+
+class LeaderboardController <<Controller>> {
+  - getLeaderboardUseCase: GetLeaderboardUseCase
+  --
+  + getLeaderboard(levelId: string, limit: int): Promise<LeaderboardResponseDTO>
+}
+
+class LevelController <<Controller>> {
+  - getLevelsUseCase: GetLevelsUseCase
+  - updateLevelUseCase: UpdateLevelConfigurationUseCase
+  --
+  + getLevels(): Promise<LevelsResponseDTO>
+  + updateLevel(levelId: string, body: UpdateLevelRequestDTO): Promise<UpdateLevelResponseDTO>
+}
+
+' ─────────────────────────────────────────
+' REQUEST / RESPONSE DTOs (HTTP)
+' ─────────────────────────────────────────
+
+class RegisterRequestDTO <<DTO>> {
+  + email: string
+  + username: string
+  + password: string
+}
+
+class RegisterResponseDTO <<DTO>> {
+  + userId: string
+  + username: string
+  + token: string
+}
+
+class LoginRequestDTO <<DTO>> {
+  + email: string
+  + password: string
+}
+
+class LoginResponseDTO <<DTO>> {
+  + userId: string
+  + username: string
+  + token: string
+}
+
+class SyncRequestDTO <<DTO>> {
+  + levels: LevelProgressHttpDTO[]
+}
+
+class SyncResponseDTO <<DTO>> {
+  + levels: LevelProgressHttpDTO[]
+}
+
+class LevelProgressHttpDTO <<DTO>> {
+  + levelId: string
+  + bestScore: int
+  + completedAt: string
+}
+
+class SubmitScoreRequestDTO <<DTO>> {
+  + levelId: string
+  + score: int
+}
+
+class SubmitScoreResponseDTO <<DTO>> {
+  + accepted: boolean
+  + qualifiedForLeaderboard: boolean
+}
+
+class LeaderboardResponseDTO <<DTO>> {
+  + entries: LeaderboardEntryHttpDTO[]
+}
+
+class LeaderboardEntryHttpDTO <<DTO>> {
+  + rank: int
+  + username: string
+  + score: int
+  + achievedAt: string
+}
+
+class LevelsResponseDTO <<DTO>> {
+  + levels: LevelHttpDTO[]
+}
+
+class LevelHttpDTO <<DTO>> {
+  + id: string
+  + difficulty: string
+  + moveLimit: int
+  + boardLayout: string
+  + version: int
+}
+
+class UpdateLevelRequestDTO <<DTO>> {
+  + boardLayout: string
+  + moveLimit: int
+}
+
+class UpdateLevelResponseDTO <<DTO>> {
+  + levelId: string
+  + version: int
+}
+
+' ─────────────────────────────────────────
+' MAPPERS (HTTP ↔ Application)
+' ─────────────────────────────────────────
+
+class UserMapper <<Mapper>> {
+  + toRegisterInput(dto: RegisterRequestDTO): RegisterUserInput
+  + toLoginInput(dto: LoginRequestDTO): LoginUserInput
+  + toRegisterResponse(output: RegisterUserOutput): RegisterResponseDTO
+  + toLoginResponse(output: LoginUserOutput): LoginResponseDTO
+}
+
+class ProgressMapper <<Mapper>> {
+  + toSyncInput(userId: string, dto: SyncRequestDTO): SyncProgressInput
+  + toSyncResponse(output: SyncProgressOutput): SyncResponseDTO
+}
+
+class ScoreMapper <<Mapper>> {
+  + toSubmitInput(userId: string, dto: SubmitScoreRequestDTO): SubmitScoreInput
+  + toSubmitResponse(output: SubmitScoreOutput): SubmitScoreResponseDTO
+}
+
+class LeaderboardMapper <<Mapper>> {
+  + toGetLeaderboardInput(levelId: string, limit: int): GetLeaderboardInput
+  + toLeaderboardResponse(output: GetLeaderboardOutput): LeaderboardResponseDTO
+}
+
+class LevelMapper <<Mapper>> {
+  + toUpdateInput(levelId: string, dto: UpdateLevelRequestDTO): UpdateLevelInput
+  + toLevelsResponse(output: GetLevelsOutput): LevelsResponseDTO
+  + toUpdateResponse(output: UpdateLevelOutput): UpdateLevelResponseDTO
+}
+
+' ─────────────────────────────────────────
+' BUILDER — Patrón creacional
+' ─────────────────────────────────────────
+
+class LevelConfigBuilder <<Builder>> {
+  - id: string
+  - difficulty: string
+  - moveLimit: int
+  - boardLayout: string
+  --
+  + setId(id: string): LevelConfigBuilder
+  + setDifficulty(difficulty: string): LevelConfigBuilder
+  + setMoveLimit(limit: int): LevelConfigBuilder
+  + setBoardLayout(json: string): LevelConfigBuilder
+  + build(): LevelDefinition
+}
+
+note right of LevelConfigBuilder
+  Patrón Builder (Creacional).
+  Construye instancias de LevelDefinition
+  paso a paso desde configuración JSON.
+  Usado por DatabaseSeeder para cargar
+  los 15 niveles al iniciar la app.
+end note
+
+' ─────────────────────────────────────────
+' REPOSITORY IMPLEMENTATIONS
+' ─────────────────────────────────────────
+
+class UserRepositoryImpl <<Repository>> {
+  - userEntityRepository: Repository<UserEntity>
+  - userEntityMapper: UserEntityMapper
+  --
+  + save(user: User): Promise<void>
+  + findByEmail(email: Email): Promise<User | null>
+  + findById(id: UserId): Promise<User | null>
+  + existsByEmail(email: Email): Promise<boolean>
+}
+
+class PlayerProgressRepositoryImpl <<Repository>> {
+  - progressEntityRepository: Repository<PlayerProgressEntity>
+  - progressEntityMapper: PlayerProgressEntityMapper
+  --
+  + save(progress: PlayerProgress): Promise<void>
+  + findByUserId(userId: UserId): Promise<PlayerProgress | null>
+}
+
+class LevelDefinitionRepositoryImpl <<Repository>> {
+  - levelEntityRepository: Repository<LevelDefinitionEntity>
+  - levelEntityMapper: LevelDefinitionEntityMapper
+  --
+  + save(level: LevelDefinition): Promise<void>
+  + findById(id: LevelId): Promise<LevelDefinition | null>
+  + findAll(): Promise<LevelDefinition[]>
+}
+
+class ScoreRepositoryImpl <<Repository>> {
+  - scoreEntityRepository: Repository<ScoreEntryEntity>
+  - scoreEntityMapper: ScoreEntryEntityMapper
+  --
+  + save(entry: ScoreEntry): Promise<void>
+  + findTopByLevel(levelId: LevelId, limit: int): Promise<ScoreEntry[]>
+}
+
+' ─────────────────────────────────────────
+' ENTITY MAPPERS (dominio ↔ TypeORM Entity)
+' ─────────────────────────────────────────
+
+class UserEntityMapper <<Mapper>> {
+  + toDomain(entity: UserEntity): User
+  + toPersistence(user: User): UserEntity
+}
+
+class PlayerProgressEntityMapper <<Mapper>> {
+  + toDomain(entity: PlayerProgressEntity): PlayerProgress
+  + toPersistence(progress: PlayerProgress): PlayerProgressEntity
+}
+
+class LevelDefinitionEntityMapper <<Mapper>> {
+  + toDomain(entity: LevelDefinitionEntity): LevelDefinition
+  + toPersistence(level: LevelDefinition): LevelDefinitionEntity
+}
+
+class ScoreEntryEntityMapper <<Mapper>> {
+  + toDomain(entity: ScoreEntryEntity): ScoreEntry
+  + toPersistence(entry: ScoreEntry): ScoreEntryEntity
+}
+
+' ─────────────────────────────────────────
+' SERVICE IMPLEMENTATIONS (puertos de Capa 2)
+' ─────────────────────────────────────────
+
+class BcryptPasswordEncoder <<Service>> {
+  - saltRounds: int
+  --
+  + hash(raw: string): Promise<string>
+  + verify(raw: string, hashed: string): Promise<boolean>
+}
+
+class JwtTokenProviderImpl <<Service>> {
+  - secret: string
+  - expiresIn: string
+  --
+  + generateToken(userId: string, role: string): string
+  + verifyToken(token: string): JwtPayload
+}
+
+class BestScoreConflictResolver <<Service>> {
+  + resolve(local: PlayerProgress, remote: PlayerProgress): PlayerProgress
+}
+
+' ─────────────────────────────────────────
+' PORTS DE CAPA 1 Y 2 (referencias)
+' ─────────────────────────────────────────
+
+interface IUserRepository <<Port, Layer 1>> {}
+interface IPlayerProgressRepository <<Port, Layer 1>> {}
+interface ILevelDefinitionRepository <<Port, Layer 1>> {}
+interface IScoreRepository <<Port, Layer 1>> {}
+interface IPasswordEncoder <<Port, Layer 2>> {}
+interface IJwtTokenProvider <<Port, Layer 2>> {}
+interface IConflictResolver <<Port, Layer 2>> {}
+
+' ─────────────────────────────────────────
+' CLASES DE DOMINIO Y APLICACIÓN (referencias)
+' ─────────────────────────────────────────
+
+class LevelDefinition <<Aggregate Root, Layer 1>> {}
+
+' ─────────────────────────────────────────
+' CASOS DE USO (referencias de Capa 2)
+' ─────────────────────────────────────────
+
+class RegisterUserUseCase <<Use Case, Layer 2>> {}
+class LoginUserUseCase <<Use Case, Layer 2>> {}
+class SyncProgressUseCase <<Use Case, Layer 2>> {}
+class GetLeaderboardUseCase <<Use Case, Layer 2>> {}
+class SubmitScoreUseCase <<Use Case, Layer 2>> {}
+class GetLevelsUseCase <<Use Case, Layer 2>> {}
+class UpdateLevelConfigurationUseCase <<Use Case, Layer 2>> {}
+
+' ─────────────────────────────────────────
+' RELACIONES — Controllers → Use Cases
+' ─────────────────────────────────────────
+
+AuthController --> RegisterUserUseCase : uses
+AuthController --> LoginUserUseCase : uses
+AuthController --> UserMapper : uses
+AuthController ..> RegisterRequestDTO : receives
+AuthController ..> RegisterResponseDTO : returns
+AuthController ..> LoginRequestDTO : receives
+AuthController ..> LoginResponseDTO : returns
+
+ProgressController --> SyncProgressUseCase : uses
+ProgressController --> ProgressMapper : uses
+ProgressController ..> SyncRequestDTO : receives
+ProgressController ..> SyncResponseDTO : returns
+
+ScoreController --> SubmitScoreUseCase : uses
+ScoreController --> ScoreMapper : uses
+ScoreController ..> SubmitScoreRequestDTO : receives
+ScoreController ..> SubmitScoreResponseDTO : returns
+
+LeaderboardController --> GetLeaderboardUseCase : uses
+LeaderboardController --> LeaderboardMapper : uses
+LeaderboardController ..> LeaderboardResponseDTO : returns
+
+LevelController --> GetLevelsUseCase : uses
+LevelController --> UpdateLevelConfigurationUseCase : uses
+LevelController --> LevelMapper : uses
+LevelController ..> LevelsResponseDTO : returns
+LevelController ..> UpdateLevelRequestDTO : receives
+LevelController ..> UpdateLevelResponseDTO : returns
+
+' ─────────────────────────────────────────
+' RELACIONES — Implementaciones → Interfaces
+' ─────────────────────────────────────────
+
+UserRepositoryImpl ..|> IUserRepository
+PlayerProgressRepositoryImpl ..|> IPlayerProgressRepository
+LevelDefinitionRepositoryImpl ..|> ILevelDefinitionRepository
+ScoreRepositoryImpl ..|> IScoreRepository
+
+BcryptPasswordEncoder ..|> IPasswordEncoder
+JwtTokenProviderImpl ..|> IJwtTokenProvider
+BestScoreConflictResolver ..|> IConflictResolver
+
+' ─────────────────────────────────────────
+' RELACIONES — Repositories → Entity Mappers
+' ─────────────────────────────────────────
+
+UserRepositoryImpl --> UserEntityMapper : uses
+PlayerProgressRepositoryImpl --> PlayerProgressEntityMapper : uses
+LevelDefinitionRepositoryImpl --> LevelDefinitionEntityMapper : uses
+ScoreRepositoryImpl --> ScoreEntryEntityMapper : uses
+
+' ─────────────────────────────────────────
+' RELACIONES — Builder
+' ─────────────────────────────────────────
+
+LevelConfigBuilder ..> LevelDefinition : <<builds>>
+
+' ─────────────────────────────────────────
+' RELACIONES — DTOs compuestos
+' ─────────────────────────────────────────
+
+SyncRequestDTO *-- "0..*" LevelProgressHttpDTO : levels
+SyncResponseDTO *-- "0..*" LevelProgressHttpDTO : levels
+LeaderboardResponseDTO *-- "0..*" LeaderboardEntryHttpDTO : entries
+LevelsResponseDTO *-- "0..*" LevelHttpDTO : levels
+
+' ─────────────────────────────────────────
+' AGRUPACIONES
+' ─────────────────────────────────────────
+
+together {
+  class AuthController
+  class ProgressController
+  class ScoreController
+  class LeaderboardController
+  class LevelController
+}
+
+together {
+  class UserRepositoryImpl
+  class PlayerProgressRepositoryImpl
+  class LevelDefinitionRepositoryImpl
+  class ScoreRepositoryImpl
+}
+
+together {
+  class BcryptPasswordEncoder
+  class JwtTokenProviderImpl
+  class BestScoreConflictResolver
+}
+
+together {
+  class UserMapper
+  class ProgressMapper
+  class ScoreMapper
+  class LeaderboardMapper
+  class LevelMapper
+}
+
+@enduml
