@@ -6,6 +6,7 @@ import { CONFLICT_RESOLVER } from '../ports/conflict-resolver.port';
 import { UserId } from '../../domain/value-objects/user-id.vo';
 import { LevelId } from '../../domain/value-objects/level-id.vo';
 import { Score } from '../../domain/value-objects/score.vo';
+import { Coins } from '../../domain/value-objects/coins.vo';
 import { PlayerProgress } from '../../domain/aggregates/player-progress.aggregate';
 import { SyncProgressInput } from '../dtos/sync-progress.input';
 import { SyncProgressOutput } from '../dtos/sync-progress.output';
@@ -40,6 +41,15 @@ export class SyncProgressUseCase {
       remoteProgress,
     );
 
+    // Coins deliberately bypass the (max-based) conflict resolver above —
+    // that's correct for level scores, which only ever go up, but would
+    // make it impossible to ever persist spending on power-ups. The client
+    // is the source of truth for its own current balance; only update it
+    // when one was actually sent (undefined must not be treated as 0).
+    if (input.coins !== undefined) {
+      resolvedProgress.setCoins(Coins.create(input.coins));
+    }
+
     await this.progressRepository.save(resolvedProgress);
 
     const levelProgressDtos = Array.from(
@@ -54,6 +64,7 @@ export class SyncProgressUseCase {
 
     const output = new SyncProgressOutput();
     output.levels = levelProgressDtos;
+    output.coins = resolvedProgress.getCoins().getValue();
     return output;
   }
 }

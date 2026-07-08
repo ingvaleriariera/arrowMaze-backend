@@ -123,4 +123,47 @@ describe('SyncProgressUseCase', () => {
       await expect(useCase.execute(input)).rejects.toThrow();
     });
   });
+
+  describe('should_set_coins_when_client_sends_a_balance', () => {
+    it('should persist the coin balance the client sent, last-write-wins', async () => {
+      // Arrange
+      const input = new SyncProgressInput();
+      input.userId = '550e8400-e29b-41d4-a716-446655440000';
+      input.levels = [];
+      input.coins = 250;
+
+      mockProgressRepository.findByUserId.mockResolvedValue(null);
+      const resolvedProgress = makePlayerProgress('550e8400-e29b-41d4-a716-446655440000');
+      mockConflictResolver.resolve.mockReturnValue(resolvedProgress);
+
+      // Act
+      const output = await useCase.execute(input);
+
+      // Assert
+      expect(resolvedProgress.getCoins().getValue()).toBe(250);
+      expect(output.coins).toBe(250);
+    });
+  });
+
+  describe('should_not_reset_coins_when_client_omits_the_field', () => {
+    it('should leave the resolved progress coin balance untouched', async () => {
+      // Arrange — an older/partial client that never sends `coins` must
+      // not silently wipe out whatever the server already has.
+      const input = new SyncProgressInput();
+      input.userId = '550e8400-e29b-41d4-a716-446655440000';
+      input.levels = [];
+      input.coins = undefined;
+
+      mockProgressRepository.findByUserId.mockResolvedValue(null);
+      const resolvedProgress = makePlayerProgress('550e8400-e29b-41d4-a716-446655440000');
+      const setCoinsSpy = jest.spyOn(resolvedProgress, 'setCoins');
+      mockConflictResolver.resolve.mockReturnValue(resolvedProgress);
+
+      // Act
+      await useCase.execute(input);
+
+      // Assert
+      expect(setCoinsSpy).not.toHaveBeenCalled();
+    });
+  });
 });

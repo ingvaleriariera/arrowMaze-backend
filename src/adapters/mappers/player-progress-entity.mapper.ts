@@ -5,6 +5,7 @@ import { ProgressId } from '../../domain/value-objects/progress-id.vo';
 import { UserId } from '../../domain/value-objects/user-id.vo';
 import { LevelId } from '../../domain/value-objects/level-id.vo';
 import { Score } from '../../domain/value-objects/score.vo';
+import { Coins } from '../../domain/value-objects/coins.vo';
 import { LevelProgress } from '../../domain/aggregates/level-progress.entity';
 
 @Injectable()
@@ -20,7 +21,9 @@ export class PlayerProgressEntityMapper {
       return LevelProgress.reconstitute(levelId, score, completedAt);
     });
 
-    return PlayerProgress.reconstitute(id, userId, levels, entity.updatedAt);
+    const coins = Coins.create(entity.coins ?? 0);
+
+    return PlayerProgress.reconstitute(id, userId, levels, coins, entity.updatedAt);
   }
 
   toPersistence(progress: PlayerProgress): PlayerProgressEntity {
@@ -28,6 +31,7 @@ export class PlayerProgressEntityMapper {
     entity.id = progress.getId().toString();
     entity.userId = progress.getUserId().toString();
     entity.updatedAt = progress.getUpdatedAt();
+    entity.coins = progress.getCoins().getValue();
     entity.levels = Array.from(progress.getCompletedLevels()).map((level) => ({
       levelId: level.getLevelId().toString(),
       bestScore: level.getBestScore().getValue(),

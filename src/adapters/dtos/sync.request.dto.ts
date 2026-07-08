@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, ValidateNested, IsString, IsInt, IsPositive } from 'class-validator';
+import { IsArray, ValidateNested, IsString, IsInt, IsPositive, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class LevelProgressRequestDTO {
@@ -35,4 +35,15 @@ export class SyncRequestDTO {
   @ValidateNested({ each: true })
   @Type(() => LevelProgressRequestDTO)
   levels: LevelProgressRequestDTO[];
+
+  @ApiProperty({
+    example: 250,
+    description:
+      "Player's current coin balance (last-write-wins — the server always trusts what the client sends, unlike level scores which only ever go up)",
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  coins?: number;
 }

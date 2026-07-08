@@ -18,6 +18,7 @@ export class ProgressMapper {
       levelProgressDto.completedAt = level.completedAt;
       return levelProgressDto;
     });
+    input.coins = dto.coins;
     return input;
   }
 
@@ -30,6 +31,7 @@ export class ProgressMapper {
       httpDto.completedAt = level.completedAt;
       return httpDto;
     });
+    response.coins = output.coins;
     return response;
   }
 }

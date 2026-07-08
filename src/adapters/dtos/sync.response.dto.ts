@@ -7,4 +7,10 @@ export class SyncResponseDTO {
     description: 'Synced level progress after conflict resolution',
   })
   levels: LevelProgressHttpDTO[];
+
+  @ApiProperty({
+    example: 250,
+    description: "Player's coin balance as persisted by the server",
+  })
+  coins: number;
 }

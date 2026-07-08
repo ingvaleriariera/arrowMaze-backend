@@ -17,11 +17,16 @@ export class BestScoreConflictResolver implements IConflictResolver {
       allLevels.set(level.getLevelId().toString(), true);
     }
 
-    // Create new progress starting from remote to preserve userId and other properties
+    // Create new progress starting from remote to preserve userId and other properties.
+    // Coins aren't this resolver's concern — SyncProgressUseCase overwrites
+    // them separately via setCoins() (last-write-wins, not max-based like
+    // scores); carrying remote's value here just avoids an intermediate
+    // zeroed state.
     const resolved = PlayerProgress.reconstitute(
       remote.getId(),
       remote.getUserId(),
       [],
+      remote.getCoins(),
       remote.getUpdatedAt(),
     );
 

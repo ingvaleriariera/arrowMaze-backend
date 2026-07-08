@@ -2,6 +2,7 @@ import { ProgressId } from '../value-objects/progress-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { LevelId } from '../value-objects/level-id.vo';
 import { Score } from '../value-objects/score.vo';
+import { Coins } from '../value-objects/coins.vo';
 import { LevelProgress } from './level-progress.entity';
 
 export class PlayerProgress {
@@ -9,6 +10,7 @@ export class PlayerProgress {
     private readonly id: ProgressId,
     private readonly userId: UserId,
     private readonly levels: LevelProgress[],
+    private coins: Coins,
     private updatedAt: Date,
   ) {}
 
@@ -17,6 +19,11 @@ export class PlayerProgress {
       ProgressId.generate(),
       userId,
       [],
+      // Matches the client's own GameProgress default (see game_progress.dart)
+      // — a generous starting balance so power-ups can be tested freely
+      // before a real coin economy (earning/pricing) is in place. TODO:
+      // revisit once that's designed for real players.
+      Coins.create(9999),
       new Date(),
     );
   }
@@ -25,9 +32,10 @@ export class PlayerProgress {
     id: ProgressId,
     userId: UserId,
     levels: LevelProgress[],
+    coins: Coins,
     updatedAt: Date,
   ): PlayerProgress {
-    return new PlayerProgress(id, userId, levels, updatedAt);
+    return new PlayerProgress(id, userId, levels, coins, updatedAt);
   }
 
   getId(): ProgressId {
@@ -40,6 +48,19 @@ export class PlayerProgress {
 
   getUpdatedAt(): Date {
     return this.updatedAt;
+  }
+
+  getCoins(): Coins {
+    return this.coins;
+  }
+
+  // Deliberately a direct setter, not routed through IConflictResolver like
+  // level scores are: coins are a spendable balance that legitimately goes
+  // down, while the score resolver always keeps the higher of two values —
+  // that would make spending impossible to ever persist.
+  setCoins(coins: Coins): void {
+    this.coins = coins;
+    this.updatedAt = new Date();
   }
 
   recordCompletion(levelId: LevelId, score: Score): void {

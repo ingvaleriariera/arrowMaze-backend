@@ -13,6 +13,9 @@ export class PlayerProgressEntity {
   @Column('simple-json')
   levels!: LevelProgressEmbedded[];
 
+  @Column('integer', { default: 0 })
+  coins!: number;
+
   @UpdateDateColumn()
   updatedAt!: Date;
 }

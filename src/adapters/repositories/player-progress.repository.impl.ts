@@ -26,4 +26,9 @@ export class PlayerProgressRepositoryImpl implements IPlayerProgressRepository {
     });
     return entity ? this.entityMapper.toDomain(entity) : null;
   }
+
+  async findAll(): Promise<PlayerProgress[]> {
+    const entities = await this.repository.find();
+    return entities.map((entity) => this.entityMapper.toDomain(entity));
+  }
 }
