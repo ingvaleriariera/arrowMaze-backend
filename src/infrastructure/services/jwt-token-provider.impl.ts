@@ -12,8 +12,22 @@ export class JwtTokenProviderImpl implements IJwtTokenProvider {
 
   generateToken(userId: string, role: string): string {
     const payload = { userId, role };
-    const expiresInSeconds = parseInt(this.expiresIn, 10);
-    return jwt.sign(payload, this.secret, { expiresIn: expiresInSeconds });
+    return jwt.sign(payload, this.secret, {
+      expiresIn: this.parseExpiresInSeconds(this.expiresIn),
+    });
+  }
+
+  // JWT_EXPIRES_IN may be a plain number of seconds ("86400") or a
+  // duration string like "1d"/"12h"/"30m". A bare parseInt() on a
+  // duration string silently truncates "1d" down to 1 (second), which is
+  // what produced tokens expiring almost immediately — so unit suffixes
+  // are parsed explicitly here instead.
+  private parseExpiresInSeconds(value: string): number {
+    const match = value.trim().match(/^(\d+)\s*([smhd])?$/i);
+    if (!match) return 86400;
+    const amount = parseInt(match[1], 10);
+    const unitSeconds: Record<string, number> = { s: 1, m: 60, h: 3600, d: 86400 };
+    return amount * unitSeconds[(match[2] || 's').toLowerCase()];
   }
 
   verifyToken(token: string): JwtPayload {
