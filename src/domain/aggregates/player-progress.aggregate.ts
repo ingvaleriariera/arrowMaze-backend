@@ -4,6 +4,7 @@ import { LevelId } from '../value-objects/level-id.vo';
 import { Score } from '../value-objects/score.vo';
 import { Coins } from '../value-objects/coins.vo';
 import { LevelProgress } from './level-progress.entity';
+import { DEFAULT_STARTING_COINS } from '../constants/game-economy.constants';
 
 export class PlayerProgress {
   private constructor(
@@ -19,11 +20,7 @@ export class PlayerProgress {
       ProgressId.generate(),
       userId,
       [],
-      // Matches the client's own GameProgress default (see game_progress.dart)
-      // — a generous starting balance so power-ups can be tested freely
-      // before a real coin economy (earning/pricing) is in place. TODO:
-      // revisit once that's designed for real players.
-      Coins.create(9999),
+      Coins.create(DEFAULT_STARTING_COINS),
       new Date(),
     );
   }
