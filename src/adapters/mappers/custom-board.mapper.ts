@@ -25,6 +25,8 @@ export class CustomBoardMapper {
     const response = new CreateCustomBoardResponseDto();
     response.id = output.id;
     response.name = output.name;
+    response.authorId = output.authorId;
+    response.authorUsername = output.authorUsername;
     response.difficulty = output.difficulty;
     response.boardLayout = output.boardLayout;
     response.createdAt = output.createdAt;
@@ -37,6 +39,7 @@ export class CustomBoardMapper {
       const dto = new CustomBoardHttpDTO();
       dto.id = board.id;
       dto.name = board.name;
+      dto.authorId = board.authorId;
       dto.authorUsername = board.authorUsername;
       dto.difficulty = board.difficulty;
       dto.boardLayout = board.boardLayout;

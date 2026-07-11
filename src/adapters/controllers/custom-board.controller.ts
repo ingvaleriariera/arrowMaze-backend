@@ -2,9 +2,13 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
+  Param,
   Post,
   Query,
   Request,
@@ -18,6 +22,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CreateCustomBoardUseCase } from '../../application/use-cases/create-custom-board.use-case';
+import { DeleteCustomBoardUseCase } from '../../application/use-cases/delete-custom-board.use-case';
 import { GetCustomBoardsUseCase } from '../../application/use-cases/get-custom-boards.use-case';
 import { JwtAuthGuard } from '../../infrastructure/guards/jwt-auth.guard';
 import { CreateCustomBoardRequestDto } from '../dtos/create-custom-board.request.dto';
@@ -31,6 +36,7 @@ export class CustomBoardController {
   constructor(
     private readonly createCustomBoardUseCase: CreateCustomBoardUseCase,
     private readonly getCustomBoardsUseCase: GetCustomBoardsUseCase,
+    private readonly deleteCustomBoardUseCase: DeleteCustomBoardUseCase,
     private readonly customBoardMapper: CustomBoardMapper,
   ) {}
 
@@ -58,6 +64,32 @@ export class CustomBoardController {
       // Domain validation failures (grid shape, name length…) are client
       // errors, not 500s.
       if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete an own published board' })
+  @ApiResponse({ status: 204, description: 'Board deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - token required' })
+  @ApiResponse({ status: 403, description: 'Not the author of this board' })
+  @ApiResponse({ status: 404, description: 'Board not found' })
+  async remove(@Request() req: any, @Param('id') id: string): Promise<void> {
+    try {
+      await this.deleteCustomBoardUseCase.execute(req.user.userId, id);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'Board not found') {
+          throw new NotFoundException(error.message);
+        }
+        if (error.message === 'Only the author can delete this board') {
+          throw new ForbiddenException(error.message);
+        }
         throw new BadRequestException(error.message);
       }
       throw error;

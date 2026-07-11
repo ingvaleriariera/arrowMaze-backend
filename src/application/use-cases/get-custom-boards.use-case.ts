@@ -34,6 +34,7 @@ export class GetCustomBoardsUseCase {
       const dto = new CustomBoardDTO();
       dto.id = board.getId().toString();
       dto.name = board.getName().toString();
+      dto.authorId = key;
       dto.authorUsername = usernames.get(key)!;
       dto.difficulty = board.getDifficulty().getValue();
       dto.boardLayout = board.getBoardLayout().toJson();

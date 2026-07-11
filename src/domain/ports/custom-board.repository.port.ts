@@ -1,4 +1,5 @@
 import { CustomBoard } from '../aggregates/custom-board.aggregate';
+import { CustomBoardId } from '../value-objects/custom-board-id.vo';
 
 export const CUSTOM_BOARD_REPOSITORY = 'CUSTOM_BOARD_REPOSITORY';
 
@@ -7,4 +8,8 @@ export interface ICustomBoardRepository {
 
   /** Newest first, capped at [limit]. */
   findAll(limit: number): Promise<CustomBoard[]>;
+
+  findById(id: CustomBoardId): Promise<CustomBoard | null>;
+
+  delete(id: CustomBoardId): Promise<void>;
 }

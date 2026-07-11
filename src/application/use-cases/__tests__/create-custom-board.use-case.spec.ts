@@ -25,9 +25,21 @@ describe('CreateCustomBoardUseCase', () => {
     return Object.assign(input, overrides);
   };
 
+  let mockUserRepository: any;
+
   beforeEach(() => {
-    mockRepository = { save: jest.fn(), findAll: jest.fn() };
-    useCase = new CreateCustomBoardUseCase(mockRepository);
+    mockRepository = {
+      save: jest.fn(),
+      findAll: jest.fn(),
+      findById: jest.fn(),
+      delete: jest.fn(),
+    };
+    mockUserRepository = {
+      findById: jest.fn().mockResolvedValue({
+        getUsername: () => ({ toString: () => 'player1' }),
+      }),
+    };
+    useCase = new CreateCustomBoardUseCase(mockRepository, mockUserRepository);
   });
 
   describe('should_persist_board_when_input_is_valid', () => {
@@ -37,6 +49,7 @@ describe('CreateCustomBoardUseCase', () => {
       expect(mockRepository.save).toHaveBeenCalledTimes(1);
       // uuid is mocked in the jest setup, so only assert an id was assigned.
       expect(output.id).not.toHaveLength(0);
+      expect(output.authorUsername).toBe('player1');
       expect(output.name).toBe('Mi laberinto');
       expect(output.difficulty).toBe('medium');
       expect(output.boardLayout).toBe(validGrid);

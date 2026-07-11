@@ -7,6 +7,12 @@ export class CreateCustomBoardResponseDto {
   @ApiProperty({ example: 'Mi laberinto' })
   name: string;
 
+  @ApiProperty({ example: '491290cb-ff45-4daf-abbf-b8bb76da97ab' })
+  authorId: string;
+
+  @ApiProperty({ example: 'player1' })
+  authorUsername: string;
+
   @ApiProperty({ example: 'medium', enum: ['easy', 'medium', 'hard'] })
   difficulty: string;
 

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CustomBoard } from '../../domain/aggregates/custom-board.aggregate';
 import { ICustomBoardRepository } from '../../domain/ports/custom-board.repository.port';
+import { CustomBoardId } from '../../domain/value-objects/custom-board-id.vo';
 import { CustomBoardEntity } from '../../infrastructure/orm/custom-board.entity';
 import { CustomBoardEntityMapper } from '../mappers/custom-board-entity.mapper';
 
@@ -25,5 +26,16 @@ export class CustomBoardRepositoryImpl implements ICustomBoardRepository {
       take: limit,
     });
     return entities.map((e) => this.entityMapper.toDomain(e));
+  }
+
+  async findById(id: CustomBoardId): Promise<CustomBoard | null> {
+    const entity = await this.repository.findOne({
+      where: { id: id.toString() },
+    });
+    return entity ? this.entityMapper.toDomain(entity) : null;
+  }
+
+  async delete(id: CustomBoardId): Promise<void> {
+    await this.repository.delete({ id: id.toString() });
   }
 }
