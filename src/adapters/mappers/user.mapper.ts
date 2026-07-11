@@ -20,7 +20,7 @@ export class UserMapper {
 
   toLoginInput(dto: LoginRequestDto): LoginUserInput {
     const input = new LoginUserInput();
-    input.email = dto.email;
+    input.emailOrUsername = dto.email;
     input.password = dto.password;
     return input;
   }

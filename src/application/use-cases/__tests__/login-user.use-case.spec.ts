@@ -13,6 +13,7 @@ describe('LoginUserUseCase', () => {
     mockUserRepository = {
       save: jest.fn(),
       findByEmail: jest.fn(),
+      findByUsername: jest.fn(),
       findById: jest.fn(),
       existsByEmail: jest.fn(),
     };
@@ -38,7 +39,7 @@ describe('LoginUserUseCase', () => {
     it('should return token and user data', async () => {
       // Arrange
       const input = new LoginUserInput();
-      input.email = 'user@example.com';
+      input.emailOrUsername = 'user@example.com';
       input.password = 'password123';
 
       const user = makeUser('user@example.com', 'testuser');
@@ -61,7 +62,7 @@ describe('LoginUserUseCase', () => {
     it('should throw error for non-existent email', async () => {
       // Arrange
       const input = new LoginUserInput();
-      input.email = 'nonexistent@example.com';
+      input.emailOrUsername = 'nonexistent@example.com';
       input.password = 'password123';
 
       mockUserRepository.findByEmail.mockResolvedValue(null);
@@ -78,7 +79,7 @@ describe('LoginUserUseCase', () => {
     it('should throw error for wrong password', async () => {
       // Arrange
       const input = new LoginUserInput();
-      input.email = 'user@example.com';
+      input.emailOrUsername = 'user@example.com';
       input.password = 'wrongpassword';
 
       const user = makeUser('user@example.com', 'testuser');
@@ -93,16 +94,42 @@ describe('LoginUserUseCase', () => {
     });
   });
 
-  describe('should_throw_error_when_email_format_is_invalid', () => {
-    it('should throw error for invalid email', async () => {
+  describe('should_login_with_username_when_identifier_has_no_at_sign', () => {
+    it('should resolve the user by username and return a token', async () => {
       // Arrange
       const input = new LoginUserInput();
-      input.email = 'not-an-email';
+      input.emailOrUsername = 'testuser';
+      input.password = 'password123';
+
+      const user = makeUser('user@example.com', 'testuser');
+      mockUserRepository.findByUsername.mockResolvedValue(user);
+      mockPasswordEncoder.verify.mockResolvedValue(true);
+      mockJwtTokenProvider.generateToken.mockReturnValue('jwt_token_123');
+
+      // Act
+      const output = await useCase.execute(input);
+
+      // Assert
+      expect(output.token).toBe('jwt_token_123');
+      expect(mockUserRepository.findByUsername).toHaveBeenCalledTimes(1);
+      expect(mockUserRepository.findByEmail).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('should_treat_malformed_identifier_as_invalid_credentials', () => {
+    it('should not reveal whether the account exists', async () => {
+      // Arrange: hyphens are invalid in usernames and there is no @, so
+      // this fails both value objects.
+      const input = new LoginUserInput();
+      input.emailOrUsername = 'not-an-email';
       input.password = 'password123';
 
       // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow();
+      await expect(useCase.execute(input)).rejects.toThrow(
+        'Invalid credentials',
+      );
       expect(mockUserRepository.findByEmail).not.toHaveBeenCalled();
+      expect(mockPasswordEncoder.verify).not.toHaveBeenCalled();
     });
   });
 });

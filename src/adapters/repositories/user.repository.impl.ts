@@ -7,6 +7,7 @@ import { UserEntity } from '../../infrastructure/orm/user.entity';
 import { UserEntityMapper } from '../mappers/user-entity.mapper';
 import { Email } from '../../domain/value-objects/email.vo';
 import { UserId } from '../../domain/value-objects/user-id.vo';
+import { Username } from '../../domain/value-objects/username.vo';
 
 @Injectable()
 export class UserRepositoryImpl implements IUserRepository {
@@ -24,6 +25,13 @@ export class UserRepositoryImpl implements IUserRepository {
   async findByEmail(email: Email): Promise<User | null> {
     const entity = await this.repository.findOne({
       where: { email: email.toString() },
+    });
+    return entity ? this.entityMapper.toDomain(entity) : null;
+  }
+
+  async findByUsername(username: Username): Promise<User | null> {
+    const entity = await this.repository.findOne({
+      where: { username: username.toString() },
     });
     return entity ? this.entityMapper.toDomain(entity) : null;
   }
