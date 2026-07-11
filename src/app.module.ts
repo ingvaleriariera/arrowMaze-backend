@@ -7,6 +7,7 @@ import { LevelModule } from './infrastructure/modules/level.module';
 import { ProgressModule } from './infrastructure/modules/progress.module';
 import { ScoreModule } from './infrastructure/modules/score.module';
 import { LeaderboardModule } from './infrastructure/modules/leaderboard.module';
+import { CustomBoardModule } from './infrastructure/modules/custom-board.module';
 import { DatabaseSeeder } from './infrastructure/seeders/database.seeder';
 import { LoggingInterceptor } from './infrastructure/aop/logging.interceptor';
 import { HttpExceptionFilter } from './infrastructure/aop/http-exception.filter';
@@ -42,6 +43,7 @@ import { HttpExceptionFilter } from './infrastructure/aop/http-exception.filter'
     ProgressModule,
     ScoreModule,
     LeaderboardModule,
+    CustomBoardModule,
   ],
   providers: [
     {
