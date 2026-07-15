@@ -49,4 +49,11 @@ export class UserRepositoryImpl implements IUserRepository {
     });
     return count > 0;
   }
+
+  async existsByUsername(username: Username): Promise<boolean> {
+    const count = await this.repository.count({
+      where: { username: username.toString() },
+    });
+    return count > 0;
+  }
 }

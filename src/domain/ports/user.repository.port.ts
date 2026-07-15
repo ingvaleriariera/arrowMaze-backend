@@ -11,4 +11,5 @@ export interface IUserRepository {
   findByUsername(username: Username): Promise<User | null>;
   findById(id: UserId): Promise<User | null>;
   existsByEmail(email: Email): Promise<boolean>;
+  existsByUsername(username: Username): Promise<boolean>;
 }

@@ -35,7 +35,7 @@ export class AuthController {
   })
   @ApiResponse({
     status: 409,
-    description: 'Email already registered',
+    description: 'Email already registered or username already taken',
   })
   async register(
     @Body() registerDto: RegisterRequestDto,

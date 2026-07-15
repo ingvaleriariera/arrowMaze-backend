@@ -15,6 +15,7 @@ describe('RegisterUserUseCase', () => {
       findByEmail: jest.fn(),
       findById: jest.fn(),
       existsByEmail: jest.fn(),
+      existsByUsername: jest.fn(),
     };
 
     mockPasswordEncoder = {
@@ -43,6 +44,7 @@ describe('RegisterUserUseCase', () => {
       input.password = 'password123';
 
       mockUserRepository.existsByEmail.mockResolvedValue(false);
+      mockUserRepository.existsByUsername.mockResolvedValue(false);
       mockPasswordEncoder.hash.mockResolvedValue('hashed_password');
       mockJwtTokenProvider.generateToken.mockReturnValue('jwt_token_123');
 
@@ -73,6 +75,25 @@ describe('RegisterUserUseCase', () => {
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(
         'Email already registered',
+      );
+      expect(mockUserRepository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('should_throw_error_when_username_already_exists', () => {
+    it('should throw error for duplicate username', async () => {
+      // Arrange
+      const input = new RegisterUserInput();
+      input.email = 'newuser@example.com';
+      input.username = 'existinguser';
+      input.password = 'password123';
+
+      mockUserRepository.existsByEmail.mockResolvedValue(false);
+      mockUserRepository.existsByUsername.mockResolvedValue(true);
+
+      // Act & Assert
+      await expect(useCase.execute(input)).rejects.toThrow(
+        'Username already taken',
       );
       expect(mockUserRepository.save).not.toHaveBeenCalled();
     });

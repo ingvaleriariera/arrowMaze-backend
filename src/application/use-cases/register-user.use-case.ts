@@ -31,6 +31,13 @@ export class RegisterUserUseCase {
     }
 
     const username = Username.create(input.username);
+
+    const existingUsername =
+      await this.userRepository.existsByUsername(username);
+    if (existingUsername) {
+      throw new Error('Username already taken');
+    }
+
     const hashedPassword = await this.passwordEncoder.hash(input.password);
     const passwordHash = PasswordHash.create(hashedPassword);
 
