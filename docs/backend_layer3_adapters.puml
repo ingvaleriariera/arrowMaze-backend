@@ -1,6 +1,11 @@
 @startuml backend_layer3_adapters
 title Arrow Maze Backend — Capa 3: Adaptadores de Interfaz
 
+' Evita que el render se corte cuando el diagrama supera
+' el límite por defecto de PlantUML (4096px de alto/ancho).
+' "max" solo achica si hace falta, nunca agranda.
+scale max 3800*3800
+
 skinparam backgroundColor #FFFFFF
 skinparam class {
   BackgroundColor #FCE4EC
@@ -333,7 +338,7 @@ class CustomBoardEntityMapper <<Mapper>> {
 }
 
 ' ─────────────────────────────────────────
-' SERVICE IMPLEMENTATIONS (puertos de Capa 2)
+' SERVICE IMPLEMENTATIONS (interfaces de servicio de Capa 2)
 ' ─────────────────────────────────────────
 
 class BcryptPasswordEncoder <<Service>> {
@@ -356,17 +361,17 @@ class BestScoreConflictResolver <<Service>> {
 }
 
 ' ─────────────────────────────────────────
-' PORTS DE CAPA 1 Y 2 (referencias)
+' INTERFACES DE CAPA 1 Y 2 (referencias)
 ' ─────────────────────────────────────────
 
-interface IUserRepository <<Port, Layer 1>> {}
-interface IPlayerProgressRepository <<Port, Layer 1>> {}
-interface ILevelDefinitionRepository <<Port, Layer 1>> {}
-interface IScoreRepository <<Port, Layer 1>> {}
-interface ICustomBoardRepository <<Port, Layer 1>> {}
-interface IPasswordEncoder <<Port, Layer 2>> {}
-interface IJwtTokenProvider <<Port, Layer 2>> {}
-interface IConflictResolver <<Port, Layer 2>> {}
+interface IUserRepository <<Repository Interface, Layer 1>> {}
+interface IPlayerProgressRepository <<Repository Interface, Layer 1>> {}
+interface ILevelDefinitionRepository <<Repository Interface, Layer 1>> {}
+interface IScoreRepository <<Repository Interface, Layer 1>> {}
+interface ICustomBoardRepository <<Repository Interface, Layer 1>> {}
+interface IPasswordEncoder <<Service Interface, Layer 2>> {}
+interface IJwtTokenProvider <<Service Interface, Layer 2>> {}
+interface IConflictResolver <<Service Interface, Layer 2>> {}
 
 ' ─────────────────────────────────────────
 ' CLASES DE DOMINIO Y APLICACIÓN (referencias)

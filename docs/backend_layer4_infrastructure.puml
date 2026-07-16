@@ -283,8 +283,8 @@ class SwaggerConfig <<Configuration>> {
 ' REFERENCIAS CAPAS 1, 2 Y 3
 ' ─────────────────────────────────────────
 
-interface IJwtTokenProvider <<Port, Layer 2>> {}
-interface ILevelDefinitionRepository <<Port, Layer 1>> {}
+interface IJwtTokenProvider <<Service Interface, Layer 2>> {}
+interface ILevelDefinitionRepository <<Repository Interface, Layer 1>> {}
 class LevelConfigBuilder <<Builder, Layer 3>> {}
 class LeaderboardPolicy <<Domain Service, Layer 1>> {}
 class BestScoreConflictResolver <<Service, Layer 3>> {}
