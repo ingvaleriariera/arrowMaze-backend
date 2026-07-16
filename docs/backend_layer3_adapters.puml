@@ -59,6 +59,17 @@ class LevelController <<Controller>> {
   + updateLevel(levelId: string, body: UpdateLevelRequestDTO): Promise<UpdateLevelResponseDTO>
 }
 
+class CustomBoardController <<Controller>> {
+  - createCustomBoardUseCase: CreateCustomBoardUseCase
+  - getCustomBoardsUseCase: GetCustomBoardsUseCase
+  - deleteCustomBoardUseCase: DeleteCustomBoardUseCase
+  - customBoardMapper: CustomBoardMapper
+  --
+  + create(authorId: string, body: CreateCustomBoardRequestDto): Promise<CreateCustomBoardResponseDto>
+  + remove(requesterId: string, id: string): Promise<void>
+  + list(limit?: string): Promise<CustomBoardsResponseDto>
+}
+
 ' ─────────────────────────────────────────
 ' REQUEST / RESPONSE DTOs (HTTP)
 ' ─────────────────────────────────────────
@@ -79,6 +90,13 @@ class LoginRequestDTO <<DTO>> {
   + email: string
   + password: string
 }
+
+note right of LoginRequestDTO
+  El campo se sigue llamando `email`
+  por compatibilidad con clientes
+  existentes, pero acepta email
+  o username indistintamente.
+end note
 
 class LoginResponseDTO <<DTO>> {
   + userId: string
@@ -143,6 +161,36 @@ class UpdateLevelResponseDTO <<DTO>> {
   + version: int
 }
 
+class CreateCustomBoardRequestDto <<DTO>> {
+  + name: string
+  + difficulty: string
+  + boardLayout: string
+}
+
+class CreateCustomBoardResponseDto <<DTO>> {
+  + id: string
+  + name: string
+  + authorId: string
+  + authorUsername: string
+  + difficulty: string
+  + boardLayout: string
+  + createdAt: string
+}
+
+class CustomBoardsResponseDto <<DTO>> {
+  + boards: CustomBoardHttpDTO[]
+}
+
+class CustomBoardHttpDTO <<DTO>> {
+  + id: string
+  + name: string
+  + authorId: string
+  + authorUsername: string
+  + difficulty: string
+  + boardLayout: string
+  + createdAt: string
+}
+
 ' ─────────────────────────────────────────
 ' MAPPERS (HTTP ↔ Application)
 ' ─────────────────────────────────────────
@@ -173,6 +221,12 @@ class LevelMapper <<Mapper>> {
   + toUpdateInput(levelId: string, dto: UpdateLevelRequestDTO): UpdateLevelInput
   + toLevelsResponse(output: GetLevelsOutput): LevelsResponseDTO
   + toUpdateResponse(output: UpdateLevelOutput): UpdateLevelResponseDTO
+}
+
+class CustomBoardMapper <<Mapper>> {
+  + toCreateInput(authorId: string, dto: CreateCustomBoardRequestDto): CreateCustomBoardInput
+  + toCreateResponse(output: CreateCustomBoardOutput): CreateCustomBoardResponseDto
+  + toBoardsResponse(output: GetCustomBoardsOutput): CustomBoardsResponseDto
 }
 
 ' ─────────────────────────────────────────
@@ -239,6 +293,16 @@ class ScoreRepositoryImpl <<Repository>> {
   + findTopByLevel(levelId: LevelId, limit: int): Promise<ScoreEntry[]>
 }
 
+class CustomBoardRepositoryImpl <<Repository>> {
+  - repository: Repository<CustomBoardEntity>
+  - entityMapper: CustomBoardEntityMapper
+  --
+  + save(board: CustomBoard): Promise<void>
+  + findAll(limit: int): Promise<CustomBoard[]>
+  + findById(id: CustomBoardId): Promise<CustomBoard | null>
+  + delete(id: CustomBoardId): Promise<void>
+}
+
 ' ─────────────────────────────────────────
 ' ENTITY MAPPERS (dominio ↔ TypeORM Entity)
 ' ─────────────────────────────────────────
@@ -261,6 +325,11 @@ class LevelDefinitionEntityMapper <<Mapper>> {
 class ScoreEntryEntityMapper <<Mapper>> {
   + toDomain(entity: ScoreEntryEntity): ScoreEntry
   + toPersistence(entry: ScoreEntry): ScoreEntryEntity
+}
+
+class CustomBoardEntityMapper <<Mapper>> {
+  + toDomain(entity: CustomBoardEntity): CustomBoard
+  + toPersistence(board: CustomBoard): CustomBoardEntity
 }
 
 ' ─────────────────────────────────────────
@@ -294,6 +363,7 @@ interface IUserRepository <<Port, Layer 1>> {}
 interface IPlayerProgressRepository <<Port, Layer 1>> {}
 interface ILevelDefinitionRepository <<Port, Layer 1>> {}
 interface IScoreRepository <<Port, Layer 1>> {}
+interface ICustomBoardRepository <<Port, Layer 1>> {}
 interface IPasswordEncoder <<Port, Layer 2>> {}
 interface IJwtTokenProvider <<Port, Layer 2>> {}
 interface IConflictResolver <<Port, Layer 2>> {}
@@ -315,6 +385,9 @@ class GetLeaderboardUseCase <<Use Case, Layer 2>> {}
 class SubmitScoreUseCase <<Use Case, Layer 2>> {}
 class GetLevelsUseCase <<Use Case, Layer 2>> {}
 class UpdateLevelConfigurationUseCase <<Use Case, Layer 2>> {}
+class CreateCustomBoardUseCase <<Use Case, Layer 2>> {}
+class GetCustomBoardsUseCase <<Use Case, Layer 2>> {}
+class DeleteCustomBoardUseCase <<Use Case, Layer 2>> {}
 
 ' ─────────────────────────────────────────
 ' RELACIONES — Controllers → Use Cases
@@ -349,6 +422,14 @@ LevelController ..> LevelsResponseDTO : returns
 LevelController ..> UpdateLevelRequestDTO : receives
 LevelController ..> UpdateLevelResponseDTO : returns
 
+CustomBoardController --> CreateCustomBoardUseCase : uses
+CustomBoardController --> GetCustomBoardsUseCase : uses
+CustomBoardController --> DeleteCustomBoardUseCase : uses
+CustomBoardController --> CustomBoardMapper : uses
+CustomBoardController ..> CreateCustomBoardRequestDto : receives
+CustomBoardController ..> CreateCustomBoardResponseDto : returns
+CustomBoardController ..> CustomBoardsResponseDto : returns
+
 ' ─────────────────────────────────────────
 ' RELACIONES — Implementaciones → Interfaces
 ' ─────────────────────────────────────────
@@ -357,6 +438,7 @@ UserRepositoryImpl ..|> IUserRepository
 PlayerProgressRepositoryImpl ..|> IPlayerProgressRepository
 LevelDefinitionRepositoryImpl ..|> ILevelDefinitionRepository
 ScoreRepositoryImpl ..|> IScoreRepository
+CustomBoardRepositoryImpl ..|> ICustomBoardRepository
 
 BcryptPasswordEncoder ..|> IPasswordEncoder
 JwtTokenProviderImpl ..|> IJwtTokenProvider
@@ -370,6 +452,7 @@ UserRepositoryImpl --> UserEntityMapper : uses
 PlayerProgressRepositoryImpl --> PlayerProgressEntityMapper : uses
 LevelDefinitionRepositoryImpl --> LevelDefinitionEntityMapper : uses
 ScoreRepositoryImpl --> ScoreEntryEntityMapper : uses
+CustomBoardRepositoryImpl --> CustomBoardEntityMapper : uses
 
 ' ─────────────────────────────────────────
 ' RELACIONES — Builder
@@ -385,6 +468,7 @@ SyncRequestDTO *-- "0..*" LevelProgressHttpDTO : levels
 SyncResponseDTO *-- "0..*" LevelProgressHttpDTO : levels
 LeaderboardResponseDTO *-- "0..*" LeaderboardEntryHttpDTO : entries
 LevelsResponseDTO *-- "0..*" LevelHttpDTO : levels
+CustomBoardsResponseDto *-- "0..*" CustomBoardHttpDTO : boards
 
 ' ─────────────────────────────────────────
 ' AGRUPACIONES
@@ -396,6 +480,7 @@ together {
   class ScoreController
   class LeaderboardController
   class LevelController
+  class CustomBoardController
 }
 
 together {
@@ -403,6 +488,7 @@ together {
   class PlayerProgressRepositoryImpl
   class LevelDefinitionRepositoryImpl
   class ScoreRepositoryImpl
+  class CustomBoardRepositoryImpl
 }
 
 together {
@@ -417,6 +503,7 @@ together {
   class ScoreMapper
   class LeaderboardMapper
   class LevelMapper
+  class CustomBoardMapper
 }
 
 @enduml

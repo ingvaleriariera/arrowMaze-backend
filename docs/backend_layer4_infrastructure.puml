@@ -30,6 +30,7 @@ class PostgreSQL <<External DB>> #E0F7FA {
   + player_progress: Table
   + level_definitions: Table
   + score_entries: Table
+  + custom_boards: Table
 }
 
 package "External Libraries" <<External>> #F3E5F5 {
@@ -110,6 +111,15 @@ class ScoreEntryEntity <<TypeORM Entity>> {
   + achievedAt: Date
 }
 
+class CustomBoardEntity <<TypeORM Entity>> {
+  + id: string
+  + authorId: string
+  + name: string
+  + difficulty: string
+  + boardLayout: string
+  + createdAt: Date
+}
+
 ' ─────────────────────────────────────────
 ' NESTJS MODULES
 ' ─────────────────────────────────────────
@@ -117,6 +127,7 @@ class ScoreEntryEntity <<TypeORM Entity>> {
 class AppModule <<NestJS Module>> {
   + imports: TypeOrmModule, AuthModule, ProgressModule
   + imports: ScoreModule, LeaderboardModule, LevelModule
+  + imports: CustomBoardModule
 }
 
 class AuthModule <<NestJS Module>> {
@@ -153,6 +164,20 @@ class LevelModule <<NestJS Module>> {
   + providers: LevelDefinitionRepositoryImpl, LevelConfigBuilder
   + providers: LevelDefinitionEntityMapper, LevelMapper
 }
+
+class CustomBoardModule <<NestJS Module>> {
+  + imports: AuthModule
+  + controllers: CustomBoardController
+  + providers: CreateCustomBoardUseCase, GetCustomBoardsUseCase
+  + providers: DeleteCustomBoardUseCase, CustomBoardRepositoryImpl
+  + providers: CustomBoardEntityMapper, CustomBoardMapper
+}
+
+note right of CustomBoardModule
+  Importa AuthModule para reutilizar
+  JwtAuthGuard (endpoint create) y
+  USER_REPOSITORY (nombres de autor).
+end note
 
 ' ─────────────────────────────────────────
 ' AOP — ASPECTOS TRANSVERSALES
@@ -263,6 +288,8 @@ interface ILevelDefinitionRepository <<Port, Layer 1>> {}
 class LevelConfigBuilder <<Builder, Layer 3>> {}
 class LeaderboardPolicy <<Domain Service, Layer 1>> {}
 class BestScoreConflictResolver <<Service, Layer 3>> {}
+class CustomBoardRepositoryImpl <<Repository, Layer 3>> {}
+class CustomBoardEntityMapper <<Mapper, Layer 3>> {}
 
 ' ─────────────────────────────────────────
 ' RELACIONES — External Libraries → Implementaciones
@@ -282,6 +309,7 @@ UserEntity ..> PostgreSQL : <<persists to users>>
 PlayerProgressEntity ..> PostgreSQL : <<persists to player_progress>>
 LevelDefinitionEntity ..> PostgreSQL : <<persists to level_definitions>>
 ScoreEntryEntity ..> PostgreSQL : <<persists to score_entries>>
+CustomBoardEntity ..> PostgreSQL : <<persists to custom_boards>>
 TypeOrmConfig ..> PostgreSQL : <<configures connection>>
 
 ' ─────────────────────────────────────────
@@ -294,11 +322,13 @@ UserRepositoryImpl ..> UserEntity : <<persistence>>
 PlayerProgressRepositoryImpl ..> PlayerProgressEntity : <<persistence>>
 LevelDefinitionRepositoryImpl ..> LevelDefinitionEntity : <<persistence>>
 ScoreRepositoryImpl ..> ScoreEntryEntity : <<persistence>>
+CustomBoardRepositoryImpl ..> CustomBoardEntity : <<persistence>>
 
 UserEntityMapper ..> UserEntity : <<maps>>
 PlayerProgressEntityMapper ..> PlayerProgressEntity : <<maps>>
 LevelDefinitionEntityMapper ..> LevelDefinitionEntity : <<maps>>
 ScoreEntryEntityMapper ..> ScoreEntryEntity : <<maps>>
+CustomBoardEntityMapper ..> CustomBoardEntity : <<maps>>
 
 ' ─────────────────────────────────────────
 ' RELACIONES — Módulos
@@ -309,7 +339,9 @@ AppModule *-- ProgressModule
 AppModule *-- ScoreModule
 AppModule *-- LeaderboardModule
 AppModule *-- LevelModule
+AppModule *-- CustomBoardModule
 AppModule ..> TypeOrmConfig : configures
+CustomBoardModule --> AuthModule : imports
 
 ' ─────────────────────────────────────────
 ' RELACIONES — AOP
@@ -342,6 +374,7 @@ together {
   class LevelProgressEmbedded
   class LevelDefinitionEntity
   class ScoreEntryEntity
+  class CustomBoardEntity
 }
 
 together {
@@ -357,6 +390,7 @@ together {
   class ScoreModule
   class LeaderboardModule
   class LevelModule
+  class CustomBoardModule
 }
 
 together {

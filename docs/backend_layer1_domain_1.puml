@@ -90,6 +90,29 @@ class ScoreEntry <<Aggregate Root>> {
   + getAchievedAt(): DateTime
 }
 
+class CustomBoard <<Aggregate Root>> {
+  + {static} minSide: int
+  + {static} maxSide: int
+  + {static} minActiveCells: int
+  - id: CustomBoardId
+  - authorId: UserId
+  - name: BoardName
+  - difficulty: Difficulty
+  - boardLayout: BoardLayout
+  - createdAt: DateTime
+  --
+  - CustomBoard(id, authorId, name, difficulty, boardLayout, createdAt)
+  + {static} create(authorId: UserId, name: BoardName, difficulty: Difficulty, boardLayout: BoardLayout): CustomBoard
+  + {static} reconstitute(id, authorId, name, difficulty, boardLayout, createdAt): CustomBoard
+  - {static} validateGrid(boardLayout: BoardLayout): void
+  + getId(): CustomBoardId
+  + getAuthorId(): UserId
+  + getName(): BoardName
+  + getDifficulty(): Difficulty
+  + getBoardLayout(): BoardLayout
+  + getCreatedAt(): DateTime
+}
+
 ' ─────────────────────────────────────────
 ' ENTITY (dentro del agregado PlayerProgress)
 ' ─────────────────────────────────────────
@@ -161,6 +184,25 @@ class LevelId <<Value Object>> {
   + toString(): string
 }
 
+class CustomBoardId <<Value Object>> {
+  - value: string
+  --
+  - CustomBoardId(value: string)
+  + {static} generate(): CustomBoardId
+  + {static} create(value: string): CustomBoardId
+  + equals(other: CustomBoardId): boolean
+  + toString(): string
+}
+
+class BoardName <<Value Object>> {
+  - value: string
+  --
+  - BoardName(raw: string)
+  + {static} create(raw: string): BoardName
+  + equals(other: BoardName): boolean
+  + toString(): string
+}
+
 class ProgressId <<Value Object>> {
   - value: string
   --
@@ -229,6 +271,7 @@ class LeaderboardPolicy <<Domain Service>> {
 interface IUserRepository <<Port>> {
   + save(user: User): Promise<void>
   + findByEmail(email: Email): Promise<User | null>
+  + findByUsername(username: Username): Promise<User | null>
   + findById(id: UserId): Promise<User | null>
   + existsByEmail(email: Email): Promise<boolean>
 }
@@ -248,6 +291,13 @@ interface ILevelDefinitionRepository <<Port>> {
 interface IScoreRepository <<Port>> {
   + save(entry: ScoreEntry): Promise<void>
   + findTopByLevel(levelId: LevelId, limit: int): Promise<ScoreEntry[]>
+}
+
+interface ICustomBoardRepository <<Port>> {
+  + save(board: CustomBoard): Promise<void>
+  + findAll(limit: int): Promise<CustomBoard[]>
+  + findById(id: CustomBoardId): Promise<CustomBoard | null>
+  + delete(id: CustomBoardId): Promise<void>
 }
 
 ' ─────────────────────────────────────────
@@ -284,11 +334,19 @@ ScoreEntry *-- UserId
 ScoreEntry *-- LevelId
 ScoreEntry *-- Score
 
+' Value Objects de CustomBoard
+CustomBoard *-- CustomBoardId
+CustomBoard *-- UserId : authorId
+CustomBoard *-- BoardName
+CustomBoard *-- Difficulty
+CustomBoard *-- BoardLayout
+
 ' Puertos apuntan a sus agregados
 IUserRepository ..> User : <<manages>>
 IPlayerProgressRepository ..> PlayerProgress : <<manages>>
 ILevelDefinitionRepository ..> LevelDefinition : <<manages>>
 IScoreRepository ..> ScoreEntry : <<manages>>
+ICustomBoardRepository ..> CustomBoard : <<manages>>
 
 ' Domain service usa Score
 LeaderboardPolicy ..> Score : <<uses>>
