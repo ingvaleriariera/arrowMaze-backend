@@ -1,6 +1,11 @@
 @startuml backend_layer2_application
 title Arrow Maze Backend — Capa 2: Aplicación (Casos de Uso)
 
+' Evita que el render se corte cuando el diagrama supera
+' el límite por defecto de PlantUML (4096px de alto/ancho).
+' "max" solo achica si hace falta, nunca agranda.
+scale max 3800*3800
+
 skinparam backgroundColor #FFFFFF
 skinparam class {
   BackgroundColor #E8F5E9
@@ -22,20 +27,20 @@ skinparam note {
 }
 
 ' ─────────────────────────────────────────
-' PORTS — Servicios externos (definidos aquí, implementados en Capa 4)
+' INTERFACES DE SERVICIO — externos (definidas aquí, implementadas en Capa 4)
 ' ─────────────────────────────────────────
 
-interface IPasswordEncoder <<Port>> {
+interface IPasswordEncoder <<Service Interface>> {
   + hash(raw: string): Promise<string>
   + verify(raw: string, hashed: string): Promise<boolean>
 }
 
-interface IJwtTokenProvider <<Port>> {
+interface IJwtTokenProvider <<Service Interface>> {
   + generateToken(userId: string, role: string): string
   + verifyToken(token: string): JwtPayload
 }
 
-interface IConflictResolver <<Port>> {
+interface IConflictResolver <<Service Interface>> {
   + resolve(local: PlayerProgress, remote: PlayerProgress): PlayerProgress
 }
 
@@ -56,7 +61,7 @@ class RegisterUserOutput <<DTO>> {
 }
 
 class LoginUserInput <<DTO>> {
-  + email: string
+  + emailOrUsername: string
   + password: string
 }
 
@@ -138,6 +143,37 @@ class JwtPayload <<DTO>> {
   + exp: int
 }
 
+class CreateCustomBoardInput <<DTO>> {
+  + authorId: string
+  + name: string
+  + difficulty: string
+  + boardLayout: string
+}
+
+class CreateCustomBoardOutput <<DTO>> {
+  + id: string
+  + name: string
+  + authorId: string
+  + authorUsername: string
+  + difficulty: string
+  + boardLayout: string
+  + createdAt: string
+}
+
+class CustomBoardDTO <<DTO>> {
+  + id: string
+  + name: string
+  + authorId: string
+  + authorUsername: string
+  + difficulty: string
+  + boardLayout: string
+  + createdAt: string
+}
+
+class GetCustomBoardsOutput <<DTO>> {
+  + boards: CustomBoardDTO[]
+}
+
 ' ─────────────────────────────────────────
 ' CASOS DE USO
 ' ─────────────────────────────────────────
@@ -192,31 +228,59 @@ class UpdateLevelConfigurationUseCase <<Use Case>> {
   + execute(input: UpdateLevelInput): Promise<UpdateLevelOutput>
 }
 
+class CreateCustomBoardUseCase <<Use Case>> {
+  - customBoardRepository: ICustomBoardRepository
+  - userRepository: IUserRepository
+  --
+  + execute(input: CreateCustomBoardInput): Promise<CreateCustomBoardOutput>
+}
+
+class GetCustomBoardsUseCase <<Use Case>> {
+  - customBoardRepository: ICustomBoardRepository
+  - userRepository: IUserRepository
+  --
+  + execute(limit: int): Promise<GetCustomBoardsOutput>
+}
+
+class DeleteCustomBoardUseCase <<Use Case>> {
+  - customBoardRepository: ICustomBoardRepository
+  --
+  + execute(requesterId: string, boardId: string): Promise<void>
+}
+
 ' ─────────────────────────────────────────
 ' REFERENCIAS A CAPA 1 (solo para mostrar dependencias)
 ' ─────────────────────────────────────────
 
-interface IUserRepository <<Port, Layer 1>> {
+interface IUserRepository <<Repository Interface, Layer 1>> {
   + save(user: User): Promise<void>
   + findByEmail(email: Email): Promise<User | null>
+  + findByUsername(username: Username): Promise<User | null>
   + findById(id: UserId): Promise<User | null>
   + existsByEmail(email: Email): Promise<boolean>
 }
 
-interface IPlayerProgressRepository <<Port, Layer 1>> {
+interface IPlayerProgressRepository <<Repository Interface, Layer 1>> {
   + save(progress: PlayerProgress): Promise<void>
   + findByUserId(userId: UserId): Promise<PlayerProgress | null>
 }
 
-interface ILevelDefinitionRepository <<Port, Layer 1>> {
+interface ILevelDefinitionRepository <<Repository Interface, Layer 1>> {
   + save(level: LevelDefinition): Promise<void>
   + findById(id: LevelId): Promise<LevelDefinition | null>
   + findAll(): Promise<LevelDefinition[]>
 }
 
-interface IScoreRepository <<Port, Layer 1>> {
+interface IScoreRepository <<Repository Interface, Layer 1>> {
   + save(entry: ScoreEntry): Promise<void>
   + findTopByLevel(levelId: LevelId, limit: int): Promise<ScoreEntry[]>
+}
+
+interface ICustomBoardRepository <<Repository Interface, Layer 1>> {
+  + save(board: CustomBoard): Promise<void>
+  + findAll(limit: int): Promise<CustomBoard[]>
+  + findById(id: CustomBoardId): Promise<CustomBoard | null>
+  + delete(id: CustomBoardId): Promise<void>
 }
 
 class LeaderboardPolicy <<Domain Service, Layer 1>> {
@@ -224,7 +288,7 @@ class LeaderboardPolicy <<Domain Service, Layer 1>> {
 }
 
 ' ─────────────────────────────────────────
-' RELACIONES — Casos de uso → Puertos
+' RELACIONES — Casos de uso → Interfaces
 ' ─────────────────────────────────────────
 
 RegisterUserUseCase --> IUserRepository : uses
@@ -265,6 +329,18 @@ GetLevelsOutput *-- "0..*" LevelSummaryDTO
 UpdateLevelConfigurationUseCase --> ILevelDefinitionRepository : uses
 UpdateLevelConfigurationUseCase ..> UpdateLevelInput : input
 UpdateLevelConfigurationUseCase ..> UpdateLevelOutput : output
+
+CreateCustomBoardUseCase --> ICustomBoardRepository : uses
+CreateCustomBoardUseCase --> IUserRepository : uses
+CreateCustomBoardUseCase ..> CreateCustomBoardInput : input
+CreateCustomBoardUseCase ..> CreateCustomBoardOutput : output
+
+GetCustomBoardsUseCase --> ICustomBoardRepository : uses
+GetCustomBoardsUseCase --> IUserRepository : uses
+GetCustomBoardsUseCase ..> GetCustomBoardsOutput : output
+GetCustomBoardsOutput *-- "0..*" CustomBoardDTO
+
+DeleteCustomBoardUseCase --> ICustomBoardRepository : uses
 
 IJwtTokenProvider ..> JwtPayload : produces
 

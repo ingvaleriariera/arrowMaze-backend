@@ -1,6 +1,11 @@
 @startuml backend_layer1_domain
 title Arrow Maze Backend — Capa 1: Dominio
 
+' Evita que el render se corte cuando el diagrama supera
+' el límite por defecto de PlantUML (4096px de alto/ancho).
+' "max" solo achica si hace falta, nunca agranda.
+scale max 3800*3800
+
 skinparam backgroundColor #FFFFFF
 skinparam class {
   BackgroundColor #FFF9C4
@@ -20,277 +25,368 @@ skinparam note {
   BackgroundColor #F3E5F5
   BorderColor #7B1FA2
 }
-
-' ─────────────────────────────────────────
-' AGGREGATE ROOTS
-' ─────────────────────────────────────────
-
-class User <<Aggregate Root>> {
-  - id: UserId
-  - email: Email
-  - username: Username
-  - passwordHash: PasswordHash
-  - role: UserRole
-  - createdAt: DateTime
-  --
-  + {static} register(email: Email, username: Username, passwordHash: PasswordHash): User
-  + changeUsername(newUsername: Username): void
-  + promoteToAdmin(): void
-  + getId(): UserId
-  + getEmail(): Email
-  + getUsername(): Username
-  + getPasswordHash(): PasswordHash
-  + getRole(): UserRole
-}
-
-class PlayerProgress <<Aggregate Root>> {
-  - id: ProgressId
-  - userId: UserId
-  - levels: LevelProgress[]
-  - updatedAt: DateTime
-  --
-  - PlayerProgress(userId: UserId)
-  + recordCompletion(levelId: LevelId, score: Score): void
-  + getBestScore(levelId: LevelId): Score
-  + isLevelCompleted(levelId: LevelId): boolean
-  + getCompletedLevels(): LevelProgress[]
-  + getId(): ProgressId
-  + getUserId(): UserId
-}
-
-class LevelDefinition <<Aggregate Root>> {
-  - id: LevelId
-  - difficulty: Difficulty
-  - moveLimit: MoveLimit
-  - boardLayout: BoardLayout
-  - version: int
-  --
-  - LevelDefinition(id: LevelId, difficulty: Difficulty, moveLimit: MoveLimit, boardLayout: BoardLayout)
-  + updateLayout(newLayout: BoardLayout): void
-  + updateMoveLimit(newLimit: MoveLimit): void
-  + getId(): LevelId
-  + getDifficulty(): Difficulty
-  + getMoveLimit(): MoveLimit
-  + getBoardLayout(): BoardLayout
-  + getVersion(): int
-}
-
-class ScoreEntry <<Aggregate Root>> {
-  - id: ScoreEntryId
-  - userId: UserId
-  - levelId: LevelId
-  - score: Score
-  - achievedAt: DateTime
-  --
-  - ScoreEntry(userId: UserId, levelId: LevelId, score: Score)
-  + getId(): ScoreEntryId
-  + getUserId(): UserId
-  + getLevelId(): LevelId
-  + getScore(): Score
-  + getAchievedAt(): DateTime
+skinparam packageStyle rectangle
+skinparam package {
+  BackgroundColor #FAFAFA
+  BorderColor #9E9E9E
 }
 
 ' ─────────────────────────────────────────
-' ENTITY (dentro del agregado PlayerProgress)
+' VALUE OBJECTS COMPARTIDOS
+' (usados por más de un agregado, sin dueño único)
 ' ─────────────────────────────────────────
 
-class LevelProgress <<Entity>> {
-  - levelId: LevelId
-  - bestScore: Score
-  - completedAt: DateTime
-  --
-  - LevelProgress(levelId: LevelId, score: Score)
-  + updateScoreIfHigher(newScore: Score): void
-  + getLevelId(): LevelId
-  + getBestScore(): Score
-  + getCompletedAt(): DateTime
+package "Value Objects Compartidos" {
+  class Score <<Value Object>> {
+    - value: int
+    --
+    - Score(points: int)
+    + isGreaterThan(other: Score): boolean
+    + getValue(): int
+    + equals(other: Score): boolean
+  }
+
+  class Difficulty <<Value Object>> {
+    - value: string
+    --
+    - Difficulty(raw: string)
+    + {static} easy(): Difficulty
+    + {static} medium(): Difficulty
+    + {static} hard(): Difficulty
+    + getValue(): string
+    + equals(other: Difficulty): boolean
+  }
+
+  class BoardLayout <<Value Object>> {
+    - data: string
+    --
+    - BoardLayout(json: string)
+    + toJson(): string
+  }
 }
 
 ' ─────────────────────────────────────────
-' VALUE OBJECTS
+' AGGREGATE: User
 ' ─────────────────────────────────────────
 
-class UserId <<Value Object>> {
-  - value: string
-  --
-  - UserId(value: string)
-  + {static} generate(): UserId
-  + equals(other: UserId): boolean
-  + toString(): string
+package "Aggregate: User" {
+  class User <<Aggregate Root>> {
+    - id: UserId
+    - email: Email
+    - username: Username
+    - passwordHash: PasswordHash
+    - role: UserRole
+    - createdAt: DateTime
+    --
+    + {static} register(email: Email, username: Username, passwordHash: PasswordHash): User
+    + changeUsername(newUsername: Username): void
+    + promoteToAdmin(): void
+    + getId(): UserId
+    + getEmail(): Email
+    + getUsername(): Username
+    + getPasswordHash(): PasswordHash
+    + getRole(): UserRole
+  }
+
+  class UserId <<Value Object>> {
+    - value: string
+    --
+    - UserId(value: string)
+    + {static} generate(): UserId
+    + equals(other: UserId): boolean
+    + toString(): string
+  }
+
+  class Email <<Value Object>> {
+    - value: string
+    --
+    - Email(raw: string)
+    + equals(other: Email): boolean
+    + toString(): string
+  }
+
+  class Username <<Value Object>> {
+    - value: string
+    --
+    - Username(raw: string)
+    + equals(other: Username): boolean
+    + toString(): string
+  }
+
+  class PasswordHash <<Value Object>> {
+    - value: string
+    --
+    - PasswordHash(hashed: string)
+    + toString(): string
+  }
+
+  class UserRole <<Value Object>> {
+    - value: string
+    --
+    - UserRole(value: string)
+    + {static} player(): UserRole
+    + {static} admin(): UserRole
+    + isAdmin(): boolean
+    + equals(other: UserRole): boolean
+    + getValue(): string
+  }
+
+  User *-- UserId
+  User *-- Email
+  User *-- Username
+  User *-- PasswordHash
+  User *-- UserRole
 }
 
-class Email <<Value Object>> {
-  - value: string
-  --
-  - Email(raw: string)
-  + equals(other: Email): boolean
-  + toString(): string
+' ─────────────────────────────────────────
+' AGGREGATE: PlayerProgress
+' ─────────────────────────────────────────
+
+package "Aggregate: PlayerProgress" {
+  class PlayerProgress <<Aggregate Root>> {
+    - id: ProgressId
+    - userId: UserId
+    - levels: LevelProgress[]
+    - updatedAt: DateTime
+    --
+    - PlayerProgress(userId: UserId)
+    + recordCompletion(levelId: LevelId, score: Score): void
+    + getBestScore(levelId: LevelId): Score
+    + isLevelCompleted(levelId: LevelId): boolean
+    + getCompletedLevels(): LevelProgress[]
+    + getId(): ProgressId
+    + getUserId(): UserId
+  }
+
+  class LevelProgress <<Entity>> {
+    - levelId: LevelId
+    - bestScore: Score
+    - completedAt: DateTime
+    --
+    - LevelProgress(levelId: LevelId, score: Score)
+    + updateScoreIfHigher(newScore: Score): void
+    + getLevelId(): LevelId
+    + getBestScore(): Score
+    + getCompletedAt(): DateTime
+  }
+
+  class ProgressId <<Value Object>> {
+    - value: string
+    --
+    - ProgressId(value: string)
+    + {static} generate(): ProgressId
+    + equals(other: ProgressId): boolean
+    + toString(): string
+  }
+
+  PlayerProgress *-- "0..*" LevelProgress : levels
+  PlayerProgress *-- ProgressId
+  LevelProgress *-- Score
 }
 
-class Username <<Value Object>> {
-  - value: string
-  --
-  - Username(raw: string)
-  + equals(other: Username): boolean
-  + toString(): string
+' ─────────────────────────────────────────
+' AGGREGATE: LevelDefinition
+' ─────────────────────────────────────────
+
+package "Aggregate: LevelDefinition" {
+  class LevelDefinition <<Aggregate Root>> {
+    - id: LevelId
+    - difficulty: Difficulty
+    - moveLimit: MoveLimit
+    - boardLayout: BoardLayout
+    - version: int
+    --
+    - LevelDefinition(id: LevelId, difficulty: Difficulty, moveLimit: MoveLimit, boardLayout: BoardLayout)
+    + updateLayout(newLayout: BoardLayout): void
+    + updateMoveLimit(newLimit: MoveLimit): void
+    + getId(): LevelId
+    + getDifficulty(): Difficulty
+    + getMoveLimit(): MoveLimit
+    + getBoardLayout(): BoardLayout
+    + getVersion(): int
+  }
+
+  class LevelId <<Value Object>> {
+    - value: string
+    --
+    - LevelId(value: string)
+    + equals(other: LevelId): boolean
+    + toString(): string
+  }
+
+  class MoveLimit <<Value Object>> {
+    - value: int
+    --
+    - MoveLimit(max: int)
+    + getValue(): int
+  }
+
+  LevelDefinition *-- LevelId
+  LevelDefinition *-- Difficulty
+  LevelDefinition *-- MoveLimit
+  LevelDefinition *-- BoardLayout
 }
 
-class PasswordHash <<Value Object>> {
-  - value: string
-  --
-  - PasswordHash(hashed: string)
-  + toString(): string
+' ─────────────────────────────────────────
+' AGGREGATE: ScoreEntry
+' ─────────────────────────────────────────
+
+package "Aggregate: ScoreEntry" {
+  class ScoreEntry <<Aggregate Root>> {
+    - id: ScoreEntryId
+    - userId: UserId
+    - levelId: LevelId
+    - score: Score
+    - achievedAt: DateTime
+    --
+    - ScoreEntry(userId: UserId, levelId: LevelId, score: Score)
+    + getId(): ScoreEntryId
+    + getUserId(): UserId
+    + getLevelId(): LevelId
+    + getScore(): Score
+    + getAchievedAt(): DateTime
+  }
+
+  class ScoreEntryId <<Value Object>> {
+    - value: string
+    --
+    - ScoreEntryId(value: string)
+    + {static} generate(): ScoreEntryId
+    + equals(other: ScoreEntryId): boolean
+    + toString(): string
+  }
+
+  ScoreEntry *-- ScoreEntryId
+  ScoreEntry *-- Score
 }
 
-class UserRole <<Value Object>> {
-  - value: string
-  --
-  - UserRole(value: string)
-  + {static} player(): UserRole
-  + {static} admin(): UserRole
-  + isAdmin(): boolean
-  + equals(other: UserRole): boolean
-  + getValue(): string
-}
+' ─────────────────────────────────────────
+' AGGREGATE: CustomBoard
+' ─────────────────────────────────────────
 
-class LevelId <<Value Object>> {
-  - value: string
-  --
-  - LevelId(value: string)
-  + equals(other: LevelId): boolean
-  + toString(): string
-}
+package "Aggregate: CustomBoard" {
+  class CustomBoard <<Aggregate Root>> {
+    + {static} minSide: int
+    + {static} maxSide: int
+    + {static} minActiveCells: int
+    - id: CustomBoardId
+    - authorId: UserId
+    - name: BoardName
+    - difficulty: Difficulty
+    - boardLayout: BoardLayout
+    - createdAt: DateTime
+    --
+    - CustomBoard(id, authorId, name, difficulty, boardLayout, createdAt)
+    + {static} create(authorId: UserId, name: BoardName, difficulty: Difficulty, boardLayout: BoardLayout): CustomBoard
+    + {static} reconstitute(id, authorId, name, difficulty, boardLayout, createdAt): CustomBoard
+    - {static} validateGrid(boardLayout: BoardLayout): void
+    + getId(): CustomBoardId
+    + getAuthorId(): UserId
+    + getName(): BoardName
+    + getDifficulty(): Difficulty
+    + getBoardLayout(): BoardLayout
+    + getCreatedAt(): DateTime
+  }
 
-class ProgressId <<Value Object>> {
-  - value: string
-  --
-  - ProgressId(value: string)
-  + {static} generate(): ProgressId
-  + equals(other: ProgressId): boolean
-  + toString(): string
-}
+  class CustomBoardId <<Value Object>> {
+    - value: string
+    --
+    - CustomBoardId(value: string)
+    + {static} generate(): CustomBoardId
+    + {static} create(value: string): CustomBoardId
+    + equals(other: CustomBoardId): boolean
+    + toString(): string
+  }
 
-class ScoreEntryId <<Value Object>> {
-  - value: string
-  --
-  - ScoreEntryId(value: string)
-  + {static} generate(): ScoreEntryId
-  + equals(other: ScoreEntryId): boolean
-  + toString(): string
-}
+  class BoardName <<Value Object>> {
+    - value: string
+    --
+    - BoardName(raw: string)
+    + {static} create(raw: string): BoardName
+    + equals(other: BoardName): boolean
+    + toString(): string
+  }
 
-class Score <<Value Object>> {
-  - value: int
-  --
-  - Score(points: int)
-  + isGreaterThan(other: Score): boolean
-  + getValue(): int
-  + equals(other: Score): boolean
-}
-
-class Difficulty <<Value Object>> {
-  - value: string
-  --
-  - Difficulty(raw: string)
-  + {static} easy(): Difficulty
-  + {static} medium(): Difficulty
-  + {static} hard(): Difficulty
-  + getValue(): string
-  + equals(other: Difficulty): boolean
-}
-
-class MoveLimit <<Value Object>> {
-  - value: int
-  --
-  - MoveLimit(max: int)
-  + getValue(): int
-}
-
-class BoardLayout <<Value Object>> {
-  - data: string
-  --
-  - BoardLayout(json: string)
-  + toJson(): string
+  CustomBoard *-- CustomBoardId
+  CustomBoard *-- BoardName
+  CustomBoard *-- Difficulty
+  CustomBoard *-- BoardLayout
 }
 
 ' ─────────────────────────────────────────
 ' DOMAIN SERVICE
 ' ─────────────────────────────────────────
 
-class LeaderboardPolicy <<Domain Service>> {
-  --
-  + qualifiesForLeaderboard(newScore: Score, currentBest: Score): boolean
+package "Domain Services" {
+  class LeaderboardPolicy <<Domain Service>> {
+    --
+    + qualifiesForLeaderboard(newScore: Score, currentBest: Score): boolean
+  }
 }
+
+LeaderboardPolicy ..> Score : <<uses>>
 
 ' ─────────────────────────────────────────
-' PORTS (interfaces de repositorio)
+' INTERFACES DE REPOSITORIO (Dependency Rule)
 ' ─────────────────────────────────────────
 
-interface IUserRepository <<Port>> {
-  + save(user: User): Promise<void>
-  + findByEmail(email: Email): Promise<User | null>
-  + findById(id: UserId): Promise<User | null>
-  + existsByEmail(email: Email): Promise<boolean>
+package "Interfaces de Repositorio" {
+  interface IUserRepository <<Repository Interface>> {
+    + save(user: User): Promise<void>
+    + findByEmail(email: Email): Promise<User | null>
+    + findByUsername(username: Username): Promise<User | null>
+    + findById(id: UserId): Promise<User | null>
+    + existsByEmail(email: Email): Promise<boolean>
+  }
+
+  interface IPlayerProgressRepository <<Repository Interface>> {
+    + save(progress: PlayerProgress): Promise<void>
+    + findByUserId(userId: UserId): Promise<PlayerProgress | null>
+  }
+
+  interface ILevelDefinitionRepository <<Repository Interface>> {
+    + save(level: LevelDefinition): Promise<void>
+    + findById(id: LevelId): Promise<LevelDefinition | null>
+    + findAll(): Promise<LevelDefinition[]>
+    + findByDifficulty(difficulty: Difficulty): Promise<LevelDefinition[]>
+  }
+
+  interface IScoreRepository <<Repository Interface>> {
+    + save(entry: ScoreEntry): Promise<void>
+    + findTopByLevel(levelId: LevelId, limit: int): Promise<ScoreEntry[]>
+  }
+
+  interface ICustomBoardRepository <<Repository Interface>> {
+    + save(board: CustomBoard): Promise<void>
+    + findAll(limit: int): Promise<CustomBoard[]>
+    + findById(id: CustomBoardId): Promise<CustomBoard | null>
+    + delete(id: CustomBoardId): Promise<void>
+  }
 }
 
-interface IPlayerProgressRepository <<Port>> {
-  + save(progress: PlayerProgress): Promise<void>
-  + findByUserId(userId: UserId): Promise<PlayerProgress | null>
-}
-
-interface ILevelDefinitionRepository <<Port>> {
-  + save(level: LevelDefinition): Promise<void>
-  + findById(id: LevelId): Promise<LevelDefinition | null>
-  + findAll(): Promise<LevelDefinition[]>
-  + findByDifficulty(difficulty: Difficulty): Promise<LevelDefinition[]>
-}
-
-interface IScoreRepository <<Port>> {
-  + save(entry: ScoreEntry): Promise<void>
-  + findTopByLevel(levelId: LevelId, limit: int): Promise<ScoreEntry[]>
-}
-
-' ─────────────────────────────────────────
-' RELACIONES
-' ─────────────────────────────────────────
-
-' Composición: PlayerProgress contiene LevelProgress
-PlayerProgress *-- "0..*" LevelProgress : levels
-
-' Value Objects de User
-User *-- UserId
-User *-- Email
-User *-- Username
-User *-- PasswordHash
-User *-- UserRole
-
-' Value Objects de PlayerProgress
-PlayerProgress *-- ProgressId
-PlayerProgress *-- UserId
-
-' Value Objects de LevelProgress
-LevelProgress *-- LevelId
-LevelProgress *-- Score
-
-' Value Objects de LevelDefinition
-LevelDefinition *-- LevelId
-LevelDefinition *-- Difficulty
-LevelDefinition *-- MoveLimit
-LevelDefinition *-- BoardLayout
-
-' Value Objects de ScoreEntry
-ScoreEntry *-- ScoreEntryId
-ScoreEntry *-- UserId
-ScoreEntry *-- LevelId
-ScoreEntry *-- Score
-
-' Puertos apuntan a sus agregados
+' Las interfaces de repositorio apuntan a sus agregados
 IUserRepository ..> User : <<manages>>
 IPlayerProgressRepository ..> PlayerProgress : <<manages>>
 ILevelDefinitionRepository ..> LevelDefinition : <<manages>>
 IScoreRepository ..> ScoreEntry : <<manages>>
+ICustomBoardRepository ..> CustomBoard : <<manages>>
 
-' Domain service usa Score
-LeaderboardPolicy ..> Score : <<uses>>
+' ─────────────────────────────────────────
+' REFERENCIAS CRUZANDO LÍMITES DE AGREGADO
+' (por identidad — nunca por objeto completo)
+' ─────────────────────────────────────────
+
+PlayerProgress ..> UserId : referencia (dueño)
+LevelProgress ..> LevelId : referencia
+ScoreEntry ..> UserId : referencia
+ScoreEntry ..> LevelId : referencia
+CustomBoard ..> UserId : referencia (authorId)
+
+note bottom of "Interfaces de Repositorio"
+  Composición (**--**) = el agregado posee el objeto.
+  Dependencia (**..>**) = referencia por identidad
+  cruzando el límite de otro agregado, o uso de un
+  Value Object compartido (no exclusivo).
+end note
 
 @enduml
