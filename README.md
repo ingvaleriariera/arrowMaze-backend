@@ -20,7 +20,6 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/swagger-%2385EA2D.svg?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger" />
-  <img src="https://img.shields.io/badge/PlantUML-FBBA00?style=for-the-badge&logo=uml&logoColor=black" alt="PlantUML" />
   <img src="https://img.shields.io/badge/LucidChart-FF7F2A?style=for-the-badge&logo=lucidchart&logoColor=white" alt="LucidChart" />
 </p>
 
@@ -37,8 +36,8 @@
 | **ORM & Persistence** | **TypeORM** + **Supabase** (PostgreSQL) |
 | **Authentication** | **JWT** (Access Tokens) via `@nestjs/jwt` & Passport |
 | **API Documentation** | **Swagger** / OpenAPI (`@nestjs/swagger`) |
-| **UML Diagrams** | **PlantUML** (`.puml` source files in `/docs`) + **LucidChart** (visual renders) |
-| **Design Patterns** | 11 GoF patterns (Factory, Builder, Singleton, Composite, Adapter, Facade, Strategy, Observer, Command, State, Template Method) |
+| **UML Diagrams** | **LucidChart** (full cross-layer diagram) |
+| **Design Patterns** | 5 GoF patterns (Factory, Builder, Adapter, Strategy, Command) |
 
 </div>
 
@@ -95,17 +94,17 @@ Once the API is running:
 
 | Resource | URL |
 | :--- | :--- |
-| **REST API** | `http://localhost:3000/api` |
+| **REST API** | `http://localhost:3000/api/v1` |
 | **Swagger UI** | `http://localhost:3000/api/docs` |
 
 > [!IMPORTANT]
-> All protected endpoints require a `Bearer <access_token>` header. Admin-only endpoints additionally require the `admin` role encoded in the token payload. Obtain a token via `POST /api/auth/login`.
+> All protected endpoints require a `Bearer <access_token>` header. Admin-only endpoints additionally require the `admin` role encoded in the token payload. Obtain a token via `POST /api/v1/auth/login`.
 
 ---
 
 ## 🏗️ Architecture & Design
 
-The backend follows a **4-layer Clean Architecture** variant defined by the course specification. While inspired by Hexagonal Architecture and DDD, the layering convention is dictated by the academic assignment (*enunciado*) and takes precedence over strict theoretical purity.
+The backend follows a **4-layer Clean Architecture** variant defined by the course specification. It incorporates Domain-Driven Design (DDD) tactical patterns (Aggregates, Value Objects, Repository interfaces), and the layering convention is dictated by the academic assignment (*enunciado*) and takes precedence over strict theoretical purity.
 
 ---
 
@@ -186,7 +185,7 @@ Bridges the outside world with the application core.
 
 #### ⚙️ Layer 4 — Infrastructure
 
-NestJS wiring, TypeORM config, Docker, and environment concerns.
+NestJS wiring, TypeORM config, and environment concerns.
 
 ```bash
 📂 src/infrastructure/
@@ -200,23 +199,17 @@ NestJS wiring, TypeORM config, Docker, and environment concerns.
 
 ## 🧩 Design Patterns
 
-The following **11 GoF patterns** are implemented as an explicit academic requirement. Each is listed with its concrete location and purpose in this codebase.
+The following **5 GoF patterns** are implemented in this codebase. Each is listed with its concrete location and purpose.
 
 <div align="center">
 
 | Pattern | Category | Location | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Factory** | Creational | `UserRole.player()` / `UserRole.admin()` | Encapsulates Value Object instantiation behind semantic static methods |
-| **Builder** | Creational | `LevelDefinitionBuilder` | Constructs complex level JSON structures step-by-step |
-| **Singleton** | Creational | TypeORM `DataSource`, `JwtService` | Ensures single shared instances of infrastructure services |
-| **Composite** | Structural | `ArrowMazeGrid` (cells + directional edges) | Treats individual cells and the full grid uniformly |
-| **Adapter** | Structural | `RepositoryImpl` classes (Layer 3) | Wraps TypeORM APIs behind domain repository port interfaces |
-| **Facade** | Structural | `LeaderboardService` | Exposes a single unified interface over score querying, conflict resolution, and ranking |
-| **Strategy** | Behavioral | `BestScoreConflictResolver` | Pluggable algorithm for resolving duplicate score submissions per player per level |
-| **Observer** | Behavioral | Domain Events (score submitted, level completed) | Decouples side-effect logic from core use cases |
-| **Command** | Behavioral | Use case handler objects (one command per use case) | Encapsulates a request as an object, enabling deferred or queued execution |
-| **State** | Behavioral | `PlayerProgress` aggregate states | Models the lifecycle of player progress (not started → in progress → completed) |
-| **Template Method** | Behavioral | `BaseUseCase` abstract handler | Defines the skeleton of a use case execution, deferring steps to subclasses |
+| **Factory** | Creational | `UserRole.player()` / `.admin()` / `.create()` (`src/domain/value-objects/user-role.vo.ts`) | Encapsulates Value Object instantiation behind semantic static methods; constructor is private |
+| **Builder** | Creational | `LevelConfigBuilder` (`src/adapters/builders/level-config.builder.ts`) | Constructs a `LevelDefinition` step-by-step via chainable setters and `build()` |
+| **Adapter** | Structural | `RepositoryImpl` classes (Layer 3, e.g. `UserRepositoryImpl`) | Wraps TypeORM `Repository<Entity>` APIs behind domain repository port interfaces |
+| **Strategy** | Behavioral | `BestScoreConflictResolver implements IConflictResolver` | Pluggable algorithm for resolving score conflicts when syncing player progress |
+| **Command** | Behavioral | Use case handler objects (one per use case, each exposing `execute()`) | Encapsulates a request as an object with a uniform entry point |
 
 </div>
 
@@ -342,32 +335,32 @@ A complete interactive reference is available in **Swagger UI** at `http://local
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Public | Register a new player account |
-| `POST` | `/api/auth/login` | Public | Authenticate and receive a JWT |
+| `POST` | `/api/v1/auth/register` | Public | Register a new player account |
+| `POST` | `/api/v1/auth/login` | Public | Authenticate and receive a JWT |
 
 ### Levels
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/levels` | Public | List all available levels |
-| `GET` | `/api/levels/:id` | Public | Get a single level definition |
-| `POST` | `/api/levels` | Admin | Create a new level |
-| `PATCH` | `/api/levels/:id` | Admin | Update a level definition |
-| `DELETE` | `/api/levels/:id` | Admin | Delete a level |
+| `GET` | `/api/v1/levels` | Public | List all available levels |
+| `GET` | `/api/v1/levels/:id` | Public | Get a single level definition |
+| `POST` | `/api/v1/levels` | Admin | Create a new level |
+| `PATCH` | `/api/v1/levels/:id` | Admin | Update a level definition |
+| `DELETE` | `/api/v1/levels/:id` | Admin | Delete a level |
 
 ### Scores
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/scores` | Player | Submit a completed level score |
-| `GET` | `/api/scores/me` | Player | Get authenticated player's score history |
+| `POST` | `/api/v1/scores` | Player | Submit a completed level score |
+| `GET` | `/api/v1/scores/me` | Player | Get authenticated player's score history |
 
 ### Leaderboard
 
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/leaderboard` | Public | Global leaderboard (best score per player per level) |
-| `GET` | `/api/leaderboard/:levelId` | Public | Level-specific leaderboard |
+| `GET` | `/api/v1/leaderboard` | Public | Global leaderboard (best score per player per level) |
+| `GET` | `/api/v1/leaderboard/:levelId` | Public | Level-specific leaderboard |
 
 </div>
 
@@ -375,21 +368,16 @@ A complete interactive reference is available in **Swagger UI** at `http://local
 
 ## 📁 UML Diagrams
 
-Architectural diagrams are maintained in two formats:
+The complete cross-layer UML diagram (Domain, Application, Interfaces & Adapters, Infrastructure) is maintained in LucidChart:
 
-- **PlantUML** (`.puml`) — source files stored in `/docs`, version-controlled alongside the codebase.
-- **LucidChart** — visual renders for each layer, linked below for interactive exploration.
+➡️ **[View the complete UML diagram in LucidChart](https://lucid.app/lucidchart/49e45929-96c3-4110-ba7c-fbd1bca7bcc4/edit?invitationId=inv_9170294c-6f82-42ae-8a50-dbbf83af8d13&page=1Igc6LC-rTiJ#)**
 
-| File | Scope | LucidChart |
-| :--- | :--- | :--- |
-| `backend_layer1_domain.puml` | Domain — Aggregates, Entities, Value Objects, Repository ports | _(link)_ |
-| `backend_layer2_application.puml` | Application — Use Cases, Service interfaces, Application ports | _(link)_ |
-| `backend_layer3_adapters.puml` | Interfaces & Adapters — Controllers, RepositoryImpl, Guards, Mappers | _(link)_ |
-| `backend_layer4_infrastructure.puml` | Infrastructure — TypeORM entities, NestJS modules, DB config | _(link)_ |
-| `backend_complete.puml` | Full cross-layer diagram with dependency arrows | _(link)_ |
-
-> [!TIP]
-> Install the **PlantUML** extension for VS Code (`jebbs.plantuml`) to preview `.puml` files directly in the editor. LucidChart links provide an interactive, shareable view for reviewers.
+| Scope | Contents |
+| :--- | :--- |
+| Domain (Layer 1) | Aggregates, Entities, Value Objects, Repository interfaces |
+| Application (Layer 2) | Use Cases, Service interfaces, Application ports |
+| Interfaces & Adapters (Layer 3) | Controllers, RepositoryImpl, Guards, Mappers |
+| Infrastructure (Layer 4) | TypeORM entities, NestJS modules, DB config |
 
 ---
 
